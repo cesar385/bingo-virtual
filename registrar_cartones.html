@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bingo 90 Bolas - Registrar Cartones</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 80%; /* Cambiado a 80% para usar más espacio de la ventana */
+        }
+        .bingo-buttons {
+            margin-top: 20px;
+        }
+        .bingo-buttons button {
+            font-size: 20px;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .carton-list {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .carton {
+            margin: 10px; /* Ajustar el margen para dar más espacio entre cartones */
+            display: inline-block;
+            width: calc(25% - 20px); /* Ajustar el ancho para ocupar el 25% menos el margen */
+        }
+        .carton-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .carton-table {
+            border: 2px solid #000;
+            border-collapse: collapse;
+            margin: 0 auto;
+            width: 100%; /* Asegura que la tabla use el 100% del ancho del cartón */
+        }
+        .carton-table td {
+            width: 60px; /* Aumentar el ancho de las celdas */
+            height: 60px; /* Aumentar la altura de las celdas */
+            text-align: center;
+            border: 1px solid #000;
+            font-size: 24px; /* Aumentar el tamaño de la fuente para mayor visibilidad */
+            background-color: #f0f0f0;
+        }
+        .eliminar-btn, .editar-btn {
+            margin-top: 10px;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+        }
+        .eliminar-btn {
+            background-color: red;
+            color: white;
+        }
+        .eliminar-btn:hover {
+            background-color: darkred;
+        }
+        .editar-btn {
+            background-color: orange;
+            color: white;
+        }
+        .editar-btn:hover {
+            background-color: darkorange;
+        }
+        .row {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Registrar Cartones</h1>
+        <form id="cartonForm">
+            <input type="text" id="compradorInput" placeholder="Nombre del Comprador" required />
+            <input type="text" id="cartonInput" placeholder="Ingrese números del cartón (coma separados)" required />
+            <button type="submit">Agregar Cartón</button>
+        </form>
+
+        <div class="carton-list" id="cartonList"></div>
+        <div class="bingo-buttons">
+            <button id="viewBolilleroButton">Ir al Bolillero</button>
+            <button id="mainScreenButton">PANTALLA PRINCIPAL</button>
+        </div>
+    </div>
+
+    <script>
+        const cartonForm = document.getElementById('cartonForm');
+        const compradorInput = document.getElementById('compradorInput');
+        const cartonInput = document.getElementById('cartonInput');
+        const cartonListDiv = document.getElementById('cartonList');
+        const viewBolilleroButton = document.getElementById('viewBolilleroButton');
+        const mainScreenButton = document.getElementById('mainScreenButton');
+
+        let cartones = JSON.parse(localStorage.getItem('cartones')) || [];
+        let editarIndex = null;
+
+        function mostrarCartones() {
+            cartonListDiv.innerHTML = '';
+            let row;
+
+            cartones.forEach((carton, index) => {
+                if (index % 4 === 0) {
+                    // Crear una nueva fila cada 4 cartones
+                    row = document.createElement('div');
+                    row.classList.add('row');
+                    cartonListDiv.appendChild(row);
+                }
+
+                const cartonDiv = document.createElement('div');
+                cartonDiv.classList.add('carton');
+                cartonDiv.innerHTML = `
+                    <div class="carton-header">
+                        Comprador: ${carton.comprador} | Cartón: ${index + 1} <!-- Cambio aquí para mostrar la numeración automática -->
+                    </div>
+                    <table class="carton-table">
+                        ${crearTablaCarton(carton.numeros)}
+                    </table>
+                    <button class="eliminar-btn" onclick="eliminarCarton(${index})">Eliminar</button>
+                    <button class="editar-btn" onclick="editarCarton(${index})">Editar</button>
+                `;
+                row.appendChild(cartonDiv);
+            });
+        }
+
+        function crearTablaCarton(numeros) {
+            const tabla = [[], [], []];
+            for (let i = 0; i < 15; i++) {
+                tabla[Math.floor(i / 5)].push(numeros[i]);
+            }
+            return tabla.map(fila => `
+                <tr>
+                    ${fila.map(num => `<td>${num || ''}</td>`).join('')}
+                </tr>
+            `).join('');
+        }
+
+        function agregarCarton(event) {
+            event.preventDefault();
+            const comprador = compradorInput.value.trim();
+            const cartonNumeros = cartonInput.value.split(',').map(num => parseInt(num.trim()));
+
+            if (cartonNumeros.length === 15) {
+                const nuevoCarton = {
+                    comprador,
+                    numeros: cartonNumeros,
+                };
+
+                if (editarIndex !== null) {
+                    cartones[editarIndex] = nuevoCarton;
+                    editarIndex = null;
+                } else {
+                    cartones.push(nuevoCarton);
+                }
+
+                localStorage.setItem('cartones', JSON.stringify(cartones));
+                mostrarCartones();
+                resetearFormulario();
+            } else {
+                alert('Cada cartón debe tener exactamente 15 números.');
+            }
+        }
+
+        function editarCarton(index) {
+            const carton = cartones[index];
+            compradorInput.value = carton.comprador;
+            cartonInput.value = carton.numeros.join(', ');
+            editarIndex = index;
+        }
+
+        function eliminarCarton(index) {
+            cartones.splice(index, 1);
+            localStorage.setItem('cartones', JSON.stringify(cartones));
+            mostrarCartones();
+        }
+
+        function resetearFormulario() {
+            compradorInput.value = '';
+            cartonInput.value = '';
+        }
+
+        cartonForm.addEventListener('submit', agregarCarton);
+        viewBolilleroButton.addEventListener('click', () => {
+            window.location.href = 'bolillero.html';
+        });
+
+        mainScreenButton.addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+
+        mostrarCartones();
+    </script>
+
+</body>
+</html>

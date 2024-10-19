@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bingo Virtual</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e9f5d8;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+
+        h1 {
+            color: #0056A6;
+            font-size: 3em;
+            margin: 20px 0;
+        }
+
+        h2 {
+            color: #7DBE34;
+            font-size: 2.5em;
+            margin: 10px 0;
+        }
+
+        .start-button {
+            background-color: #7DBE34;
+            color: #fff;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .start-button:hover {
+            background-color: #66a72d;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <img src="INICIAR.png" alt="Bingo Virtual">
+        <button class="start-button" onclick="startBingo()">INICIAR</button>
+    </div>
+
+    <script>
+        function startBingo() {
+            // Redirige a la página local "bolillero.html" en la misma carpeta
+            window.location.href = 'bolillero.html';
+        }
+    </script>
+
+</body>
+</html>
