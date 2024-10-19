@@ -100,6 +100,36 @@
             background-color: #007BFF;
             color: white;
         }
+
+        /* Estilos para el mensaje de ganador que aparecerá adelante */
+        .winner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* Fondo semi-transparente */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            flex-direction: column;
+            display: none; /* Oculto por defecto */
+        }
+
+        .winner-overlay button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -113,7 +143,7 @@
                 <button id="drawButton">Girar Bolillero</button>
                 <button id="resetButton">Reiniciar</button>
                 <button id="viewCartonesButton">Ver Cartones</button>
-                <button id="mainScreenButton">PANTALLA PRINCIPAL</button> <!-- Nuevo botón -->
+                <button id="mainScreenButton">PANTALLA PRINCIPAL</button>
             </div>
         </div>
         <div class="middle-panel">
@@ -126,6 +156,12 @@
         </div>
     </div>
 
+    <!-- Sección de superposición para el mensaje de ganador -->
+    <div id="winnerOverlay" class="winner-overlay">
+        <div id="winnerMessage">¡LÍNEA GANADORA!</div>
+        <button id="closeOverlayButton">Cerrar</button>
+    </div>
+
     <script>
         const numbers = Array.from({ length: 90 }, (_, i) => i + 1);
         let drawnNumbers = [];
@@ -135,8 +171,11 @@
         const drawButton = document.getElementById('drawButton');
         const resetButton = document.getElementById('resetButton');
         const viewCartonesButton = document.getElementById('viewCartonesButton');
-        const mainScreenButton = document.getElementById('mainScreenButton'); // Nuevo botón
+        const mainScreenButton = document.getElementById('mainScreenButton');
         const numberGridDiv = document.getElementById('numberGrid');
+        const winnerOverlayDiv = document.getElementById('winnerOverlay');
+        const winnerMessageDiv = document.getElementById('winnerMessage');
+        const closeOverlayButton = document.getElementById('closeOverlayButton');
 
         // Llenar la cuadrícula de números del 1 al 90
         function generateNumberGrid() {
@@ -193,6 +232,7 @@
             drawnNumbersDiv.innerHTML = '';
             updateBolillaCount();
             generateNumberGrid();
+            winnerOverlayDiv.style.display = 'none'; // Ocultar el mensaje al reiniciar
             localStorage.removeItem('bingoState');
         }
 
@@ -227,27 +267,33 @@
 
                 lineas.forEach(linea => {
                     if (linea.every(num => drawnNumbers.includes(num))) {
-                        alert(`¡Línea ganadora!\nComprador: ${carton.comprador}\nNúmeros ganadores: ${linea.join(', ')}`);
+                        // Mostrar el mensaje de ganador en la superposición
+                        winnerMessageDiv.innerHTML = `¡LÍNEA GANADORA!<br>Comprador: ${carton.comprador}<br>Números: ${linea.join(', ')}`;
+                        winnerOverlayDiv.style.display = 'flex'; // Mostrar el mensaje
                     }
                 });
             });
         }
 
         viewCartonesButton.addEventListener('click', () => {
-            saveGameState(); // Guardar el estado antes de redirigir
+            saveGameState();
             window.location.href = 'registrar_cartones.html';
         });
 
-        mainScreenButton.addEventListener('click', () => { // Evento para el nuevo botón
-            saveGameState(); // Guardar el estado antes de redirigir
+        mainScreenButton.addEventListener('click', () => {
+            saveGameState();
             window.location.href = 'index.html';
         });
 
         drawButton.addEventListener('click', drawNumber);
         resetButton.addEventListener('click', resetGame);
 
+        closeOverlayButton.addEventListener('click', () => {
+            winnerOverlayDiv.style.display = 'none';
+        });
+
         generateNumberGrid();
-        loadGameState(); // Cargar el estado del juego si existe
+        loadGameState();
     </script>
 
 </body>
