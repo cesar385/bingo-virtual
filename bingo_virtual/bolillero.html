@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bingo 90 Bolas - Bolillero</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 80%;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .left-panel {
+            flex: 1;
+            margin-right: 20px;
+        }
+        .middle-panel {
+            flex: 1;
+            text-align: center;
+        }
+        .bingo-number {
+            font-size: 60px;
+            color: #fff;
+            background-color: #007BFF;
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        .bingo-buttons {
+            margin-top: 20px;
+        }
+        .bingo-buttons button {
+            font-size: 20px;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .drawn-numbers {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .drawn-numbers span {
+            font-size: 24px;
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            background-color: #ddd;
+            border-radius: 50%;
+            margin: 5px;
+            text-align: center;
+        }
+        .last-drawn {
+            color: red;
+            font-weight: bold;
+        }
+        .bolilla-count {
+            font-size: 24px;
+            margin-top: 20px;
+            color: #555;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-gap: 10px;
+            margin-top: 20px;
+        }
+        .grid-item {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #eee;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .marked {
+            background-color: #007BFF;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="left-panel">
+            <h1>BINGO VIRTUAL</h1>
+            <div id="bingoNumber" class="bingo-number">--</div>
+            <div class="bolilla-count" id="bolillaCount">Bolilla N°: 0</div>
+            <div class="bingo-buttons">
+                <button id="drawButton">Girar Bolillero</button>
+                <button id="resetButton">Reiniciar</button>
+                <button id="viewCartonesButton">Ver Cartones</button>
+                <button id="mainScreenButton">PANTALLA PRINCIPAL</button> <!-- Nuevo botón -->
+            </div>
+        </div>
+        <div class="middle-panel">
+            <h2>Números Extraídos</h2>
+            <div class="drawn-numbers" id="drawnNumbers"></div>
+        </div>
+        <div style="margin-left: 30px;">
+            <h2>.</h2>
+            <div class="grid-container" id="numberGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        const numbers = Array.from({ length: 90 }, (_, i) => i + 1);
+        let drawnNumbers = [];
+        const bingoNumberDiv = document.getElementById('bingoNumber');
+        const drawnNumbersDiv = document.getElementById('drawnNumbers');
+        const bolillaCountDiv = document.getElementById('bolillaCount');
+        const drawButton = document.getElementById('drawButton');
+        const resetButton = document.getElementById('resetButton');
+        const viewCartonesButton = document.getElementById('viewCartonesButton');
+        const mainScreenButton = document.getElementById('mainScreenButton'); // Nuevo botón
+        const numberGridDiv = document.getElementById('numberGrid');
+
+        // Llenar la cuadrícula de números del 1 al 90
+        function generateNumberGrid() {
+            numberGridDiv.innerHTML = numbers.map(num => `
+                <div class="grid-item" id="grid-${num}">${num}</div>
+            `).join('');
+        }
+
+        function drawNumber() {
+            if (numbers.length > 0) {
+                const randomIndex = Math.floor(Math.random() * numbers.length);
+                const number = numbers.splice(randomIndex, 1)[0];
+                drawnNumbers.push(number);
+                bingoNumberDiv.textContent = number;
+                updateDrawnNumbers();
+                updateBolillaCount();
+                markNumberOnGrid(number);
+                checkWinners();
+                saveGameState();
+            } else {
+                bingoNumberDiv.textContent = '¡Completado!';
+                drawButton.disabled = true;
+            }
+        }
+
+        function updateDrawnNumbers() {
+            drawnNumbersDiv.innerHTML = drawnNumbers
+                .slice().reverse()
+                .map((num, index) => 
+                    index === 0 
+                        ? `<span class="last-drawn">${num}</span>` 
+                        : `<span>${num}</span>`
+                )
+                .join('');
+        }
+
+        function updateBolillaCount() {
+            bolillaCountDiv.textContent = `Bolilla N°: ${drawnNumbers.length}`;
+        }
+
+        function markNumberOnGrid(number) {
+            const gridItem = document.getElementById(`grid-${number}`);
+            if (gridItem) {
+                gridItem.classList.add('marked');
+            }
+        }
+
+        function resetGame() {
+            numbers.length = 0;
+            numbers.push(...Array.from({ length: 90 }, (_, i) => i + 1));
+            drawnNumbers = [];
+            bingoNumberDiv.textContent = '--';
+            drawButton.disabled = false;
+            drawnNumbersDiv.innerHTML = '';
+            updateBolillaCount();
+            generateNumberGrid();
+            localStorage.removeItem('bingoState');
+        }
+
+        function saveGameState() {
+            const gameState = {
+                numbers: [...numbers],
+                drawnNumbers: [...drawnNumbers]
+            };
+            localStorage.setItem('bingoState', JSON.stringify(gameState));
+        }
+
+        function loadGameState() {
+            const savedState = JSON.parse(localStorage.getItem('bingoState'));
+            if (savedState) {
+                numbers.length = 0;
+                numbers.push(...savedState.numbers);
+                drawnNumbers = savedState.drawnNumbers;
+                updateDrawnNumbers();
+                updateBolillaCount();
+                drawnNumbers.forEach(markNumberOnGrid);
+            }
+        }
+
+        function checkWinners() {
+            const cartones = JSON.parse(localStorage.getItem('cartones')) || [];
+            cartones.forEach(carton => {
+                const lineas = [
+                    carton.numeros.slice(0, 5),
+                    carton.numeros.slice(5, 10),
+                    carton.numeros.slice(10, 15)
+                ];
+
+                lineas.forEach(linea => {
+                    if (linea.every(num => drawnNumbers.includes(num))) {
+                        alert(`¡Línea ganadora!\nComprador: ${carton.comprador}\nNúmeros ganadores: ${linea.join(', ')}`);
+                    }
+                });
+            });
+        }
+
+        viewCartonesButton.addEventListener('click', () => {
+            saveGameState(); // Guardar el estado antes de redirigir
+            window.location.href = 'registrar_cartones.html';
+        });
+
+        mainScreenButton.addEventListener('click', () => { // Evento para el nuevo botón
+            saveGameState(); // Guardar el estado antes de redirigir
+            window.location.href = 'index.html';
+        });
+
+        drawButton.addEventListener('click', drawNumber);
+        resetButton.addEventListener('click', resetGame);
+
+        generateNumberGrid();
+        loadGameState(); // Cargar el estado del juego si existe
+    </script>
+
+</body>
+</html>
