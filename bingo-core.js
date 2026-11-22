@@ -123,6 +123,7 @@
         return {
             numbers: Array.from({ length: 90 }, (_, i) => i + 1),
             drawnNumbers: [],
+            cuaternoGanado: false,
             lineaGanada: false,
             bingoGanado: false,
             ganadores: []
@@ -135,7 +136,9 @@
         const sacadas = new Set(e.drawnNumbers);
         return Object.assign(base, e, {
             numbers: base.numbers.filter(n => !sacadas.has(n)),
-            ganadores: e.ganadores || []
+            ganadores: e.ganadores || [],
+            // partidas guardadas antes de existir el cuaterno
+            cuaternoGanado: e.cuaternoGanado != null ? e.cuaternoGanado : !!e.lineaGanada
         });
     }
     function guardarEstado(e) { guardar(KEY_ESTADO, e); }
@@ -146,13 +149,15 @@
         const set = sacadas instanceof Set ? sacadas : new Set(sacadas);
         const fs = filas(carton.numeros).map(f => {
             const faltan = f.filter(n => !set.has(n));
-            return { numeros: f, faltan, completa: faltan.length === 0 };
+            return { numeros: f, faltan, marcados: f.length - faltan.length, completa: faltan.length === 0 };
         });
         const faltanTotal = carton.numeros.filter(n => !set.has(n));
         return {
             filas: fs,
             marcados: carton.numeros.length - faltanTotal.length,
             faltan: faltanTotal,
+            maxFila: Math.max(...fs.map(f => f.marcados)),
+            cuaterno: fs.some(f => f.marcados >= 4),
             linea: fs.some(f => f.completa),
             minFaltaLinea: Math.min(...fs.map(f => f.faltan.length)),
             bingo: faltanTotal.length === 0
@@ -179,16 +184,18 @@
             if (n === ultima) cls.push('ultima');
             return `<div class="${cls.join(' ')}">${n}</div>`;
         };
+        const claseFila = i => p.filas[i].completa ? 'fila-completa' : p.filas[i].marcados >= 4 ? 'fila-cuaterno' : '';
         let cuerpo;
         if (g) {
-            cuerpo = g.map((f, i) => `<div style="display:contents" class="${p.filas[i].completa ? 'fila-completa' : ''}">${f.map(celda).join('')}</div>`).join('');
+            cuerpo = g.map((f, i) => `<div style="display:contents" class="${claseFila(i)}">${f.map(celda).join('')}</div>`).join('');
         } else {
-            cuerpo = filas(carton.numeros).map((f, i) => `<div style="display:contents" class="${p.filas[i].completa ? 'fila-completa' : ''}">${f.map(celda).join('')}</div>`).join('');
+            cuerpo = filas(carton.numeros).map((f, i) => `<div style="display:contents" class="${claseFila(i)}">${f.map(celda).join('')}</div>`).join('');
         }
         let estado = '';
         if (p.bingo) estado = '<span class="badge badge-bingo">¡BINGO!</span>';
         else if (p.linea) estado = '<span class="badge badge-linea">LÍNEA</span>';
-        else if (p.minFaltaLinea === 1 && set.size) estado = '<span class="badge badge-cerca">a 1 de línea</span>';
+        else if (p.cuaterno) estado = '<span class="badge badge-cuaterno">CUATERNO</span> <span class="badge badge-cerca">a 1 de línea</span>';
+        else if (p.maxFila === 3) estado = '<span class="badge badge-cerca">a 1 de cuaterno</span>';
         if (!p.bingo && p.faltan.length === 1) estado += ' <span class="badge badge-cerca">¡a 1 de bingo!</span>';
         const pct = Math.round(p.marcados / 15 * 100);
         return `<div class="carton" data-id="${escapar(carton.id)}">

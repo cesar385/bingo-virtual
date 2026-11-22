@@ -147,7 +147,7 @@
             <input type="search" id="buscar" placeholder="Buscar por nombre, N° de cartón o número…">
             <select id="filtro">
                 <option value="todos">Todos</option>
-                <option value="premio">Con línea o bingo</option>
+                <option value="premio">Con premio (cuaterno, línea o bingo)</option>
                 <option value="cerca">A 1 número</option>
             </select>
             <button class="btn" id="btnImprimir" title="Imprimir los cartones listados">🖨️ Imprimir</button>
@@ -374,8 +374,8 @@
             }
             if (filtro === 'todos') return true;
             const p = Bingo.progreso(c, sacadas);
-            if (filtro === 'premio') return p.linea || p.bingo;
-            if (filtro === 'cerca') return !p.bingo && (p.faltan.length === 1 || (!p.linea && p.minFaltaLinea === 1));
+            if (filtro === 'premio') return p.cuaterno || p.linea || p.bingo;
+            if (filtro === 'cerca') return !p.bingo && (p.faltan.length === 1 || (!p.linea && p.maxFila >= 3));
             return true;
         }).sort((a, b) => (+a.numero) - (+b.numero));
     }
@@ -395,12 +395,12 @@
         // estadísticas
         const comps = new Set(cartones.map(c => (c.comprador || '').trim().toLowerCase()).filter(Boolean));
         const set = new Set(estado.drawnNumbers);
-        const premiados = cartones.filter(c => Bingo.progreso(c, set).linea).length;
+        const premiados = cartones.filter(c => Bingo.progreso(c, set).cuaterno).length;
         $('stats').innerHTML = `
             <div class="stat"><b>${cartones.length}</b><span>cartones</span></div>
             <div class="stat"><b>${comps.size}</b><span>compradores</span></div>
             <div class="stat"><b>${estado.drawnNumbers.length}</b><span>bolillas sacadas</span></div>
-            <div class="stat"><b>${premiados}</b><span>con línea</span></div>`;
+            <div class="stat"><b>${premiados}</b><span>con cuaterno o más</span></div>`;
         $('listaCompradores').innerHTML = [...new Set(cartones.map(c => c.comprador).filter(Boolean))].map(n => `<option value="${Bingo.escapar(n)}">`).join('');
 
         if (resaltar) {

@@ -131,6 +131,7 @@
             display: inline-flex; align-items: center; gap: 8px; font-weight: 800; padding: 5px 12px; font-size: 14px;
             border-radius: 99px; background: var(--verde-claro); color: var(--verde-osc);
         }
+        .fase.linea { background: #fff3cd; color: #8a6100; }
         .fase.bingo { background: #fde8e7; color: #b42318; }
         .fase.fin { background: var(--tinta); color: #fff; }
 
@@ -287,7 +288,7 @@
     <section class="panel panel-tablero">
         <div class="tablero-cab">
             <h2>Tablero</h2>
-            <span class="fase" id="fase">Jugando por LÍNEA</span>
+            <span class="fase" id="fase">Jugando por CUATERNO</span>
         </div>
         <div class="tablero" id="tablero"></div>
     </section>
@@ -307,7 +308,7 @@
 <!-- Celebración -->
 <div class="modal celebra" id="modalGanador">
     <div class="modal-caja">
-        <h3 id="ganTitulo">¡LÍNEA!</h3>
+        <h3 id="ganTitulo">¡CUATERNO!</h3>
         <div class="sub" id="ganSub"></div>
         <div class="ganadores-cartones" id="ganCartones"></div>
         <button class="btn btn-verde" id="btnCerrarGanador" style="font-size:18px;padding:12px 26px">Continuar</button>
@@ -444,31 +445,32 @@
         if (estado.numbers.length === 0) { fase.textContent = 'Bolillero vacío'; fase.classList.add('fin'); }
         else if (estado.bingoGanado) { fase.textContent = '🏆 BINGO cantado'; fase.classList.add('fin'); }
         else if (estado.lineaGanada) { fase.textContent = 'Jugando por BINGO'; fase.classList.add('bingo'); }
-        else fase.textContent = 'Jugando por LÍNEA';
+        else if (estado.cuaternoGanado) { fase.textContent = 'Jugando por LÍNEA'; fase.classList.add('linea'); }
+        else fase.textContent = 'Jugando por CUATERNO';
 
         // Cerca de ganar
         const cartones = Bingo.cargarCartones();
         const sacadas = new Set(estado.drawnNumbers);
         const cerca = [];
-        if (!estado.bingoGanado && total) {
+        const premio = premioEnJuego();
+        if (premio && total) {
             cartones.forEach(c => {
                 const p = Bingo.progreso(c, sacadas);
-                if (!estado.lineaGanada) {
-                    const f = p.filas.find(f => f.faltan.length === 1);
-                    if (f) cerca.push({ c, falta: f.faltan[0] });
-                } else if (p.faltan.length === 1) cerca.push({ c, falta: p.faltan[0] });
-                else if (p.faltan.length === 2) cerca.push({ c, falta: p.faltan.join(' y ') });
+                // Sólo se indica CUÁNTOS números faltan, nunca cuáles
+                if (premio === 'cuaterno' && p.maxFila === 3) cerca.push({ c, falta: 1 });
+                else if (premio === 'linea' && p.maxFila === 4) cerca.push({ c, falta: 1 });
+                else if (premio === 'bingo' && p.faltan.length <= 2) cerca.push({ c, falta: p.faltan.length });
             });
         }
-        cerca.sort((a, b) => String(a.falta).length - String(b.falta).length);
+        cerca.sort((a, b) => a.falta - b.falta || (+a.c.numero) - (+b.c.numero));
         $('listaCerca').innerHTML = cartones.length === 0
             ? '<li class="vacio">No hay cartones cargados. <a href="registrar_cartones.html">Cargar cartones</a></li>'
             : cerca.length
-                ? cerca.map(x => `<li><b>N° ${Bingo.escapar(x.c.numero)}</b> ${Bingo.escapar(x.c.comprador)}<span class="falta">falta ${x.falta}</span></li>`).join('')
-                : '<li class="vacio">Nadie está a 1 número todavía.</li>';
+                ? cerca.map(x => `<li><b>N° ${Bingo.escapar(x.c.numero)}</b> ${Bingo.escapar(x.c.comprador)}<span class="falta">${x.falta === 1 ? 'le falta 1' : 'le faltan ' + x.falta}</span></li>`).join('')
+                : (premio ? `<li class="vacio">Nadie está cerca del ${NOMBRE[premio]} todavía.</li>` : '<li class="vacio">Juego terminado.</li>');
 
         $('listaGanadores').innerHTML = estado.ganadores.length
-            ? estado.ganadores.map(g => `<li><span class="badge ${g.tipo === 'bingo' ? 'badge-bingo' : 'badge-linea'}">${g.tipo === 'bingo' ? 'BINGO' : 'LÍNEA'}</span>
+            ? estado.ganadores.map(g => `<li><span class="badge badge-${g.tipo}">${NOMBRE[g.tipo]}</span>
                 <b>N° ${Bingo.escapar(g.numero)}</b> ${Bingo.escapar(g.comprador)}
                 <span class="falta" style="color:var(--gris)">bolilla ${g.bola} (${g.numeroBola})</span></li>`).join('')
             : '<li class="vacio">Sin ganadores aún.</li>';
@@ -481,25 +483,32 @@
     }
 
     /* ---------- Juego ---------- */
+    const NOMBRE = { cuaterno: 'CUATERNO', linea: 'LÍNEA', bingo: 'BINGO' };
+    const FLAG = { cuaterno: 'cuaternoGanado', linea: 'lineaGanada', bingo: 'bingoGanado' };
+
+    // Premios en orden: CUATERNO (4 de una fila) → LÍNEA (fila completa) → BINGO (cartón lleno)
+    function premioEnJuego() {
+        if (!estado.cuaternoGanado) return 'cuaterno';
+        if (!estado.lineaGanada) return 'linea';
+        if (!estado.bingoGanado) return 'bingo';
+        return null;
+    }
+
     function evaluarGanadores(n) {
-        if (estado.bingoGanado) return [];
+        const premio = premioEnJuego();
+        if (!premio) return [];
         const sacadas = new Set(estado.drawnNumbers);
         const nuevos = [];
         Bingo.cargarCartones().forEach(c => {
             const p = Bingo.progreso(c, sacadas);
-            const base = { cartonId: c.id, numero: c.numero, comprador: c.comprador, bola: estado.drawnNumbers.length, numeroBola: n };
-            if (p.bingo) nuevos.push(Object.assign({ tipo: 'bingo' }, base));
-            else if (!estado.lineaGanada && p.linea) {
-                nuevos.push(Object.assign({ tipo: 'linea', fila: p.filas.findIndex(f => f.completa) + 1 }, base));
-            }
+            const base = { tipo: premio, cartonId: c.id, numero: c.numero, comprador: c.comprador, bola: estado.drawnNumbers.length, numeroBola: n };
+            if (premio === 'cuaterno' && p.cuaterno) nuevos.push(Object.assign(base, { fila: p.filas.findIndex(f => f.marcados >= 4) + 1 }));
+            else if (premio === 'linea' && p.linea) nuevos.push(Object.assign(base, { fila: p.filas.findIndex(f => f.completa) + 1 }));
+            else if (premio === 'bingo' && p.bingo) nuevos.push(base);
         });
-        const bingos = nuevos.filter(g => g.tipo === 'bingo');
-        const lineas = nuevos.filter(g => g.tipo === 'linea');
-        if (bingos.length) { estado.bingoGanado = true; estado.lineaGanada = true; }
-        if (lineas.length) estado.lineaGanada = true;
-        const registrar = bingos.length ? bingos.concat(lineas) : lineas;
-        estado.ganadores.push(...registrar);
-        return registrar;
+        if (nuevos.length) estado[FLAG[premio]] = true;
+        estado.ganadores.push(...nuevos);
+        return nuevos;
     }
 
     function girar() {
@@ -533,8 +542,7 @@
         estado.numbers.push(n);
         const total = estado.drawnNumbers.length;
         estado.ganadores = estado.ganadores.filter(g => g.bola <= total);
-        estado.lineaGanada = estado.ganadores.length > 0;
-        estado.bingoGanado = estado.ganadores.some(g => g.tipo === 'bingo');
+        Object.keys(FLAG).forEach(t => { estado[FLAG[t]] = estado.ganadores.some(g => g.tipo === t); });
         Bingo.guardarEstado(estado);
         dibujarTodo(false);
         toast(`Se devolvió la bolilla ${n} al bolillero`);
@@ -569,10 +577,11 @@
 
     /* ---------- Celebración ---------- */
     function celebrar(nuevos) {
-        const esBingo = nuevos.some(g => g.tipo === 'bingo');
-        const lista = esBingo ? nuevos.filter(g => g.tipo === 'bingo') : nuevos;
+        const tipo = nuevos[0].tipo;
+        const esBingo = tipo === 'bingo';
+        const lista = nuevos;
         if (esBingo) pararAuto();
-        $('ganTitulo').textContent = esBingo ? '¡¡BINGO!!' : '¡LÍNEA!';
+        $('ganTitulo').textContent = esBingo ? '¡¡BINGO!!' : `¡${NOMBRE[tipo]}!`;
         $('ganSub').textContent = `Con la bolilla ${lista[0].numeroBola} (bolilla N° ${lista[0].bola})` + (lista.length > 1 ? ` · ${lista.length} ganadores` : '');
         const cartones = Bingo.cargarCartones();
         $('ganCartones').innerHTML = lista.map(g => {
@@ -582,7 +591,7 @@
         $('modalGanador').classList.add('abierto');
         sonidoPremio();
         const nombres = lista.map(g => `cartón ${g.numero}, ${g.comprador || ''}`).join('; ');
-        setTimeout(() => decir(`${esBingo ? '¡Bingo!' : '¡Línea!'} ${nombres}`), 700);
+        setTimeout(() => decir(`¡${{ cuaterno: 'Cuaterno', linea: 'Línea', bingo: 'Bingo' }[tipo]}! ${nombres}`), 700);
         confeti();
     }
     function cerrarGanador() {
