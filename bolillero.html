@@ -290,6 +290,142 @@
             .estado { grid-template-columns: 1fr 1fr; }
         }
 
+
+        /* =========================================================
+           Botón y ventana de transmisión
+           ========================================================= */
+        .btn-vivo { background: #fde8e7; color: #b42318; }
+        .btn-vivo:hover { background: #fbd3d0; }
+        .tx-opciones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (max-width: 480px) { .tx-opciones { grid-template-columns: 1fr; } }
+        .tx-op {
+            display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
+            border: 2px solid var(--borde); background: #fff; border-radius: 14px; padding: 14px 10px; cursor: pointer; font: inherit;
+        }
+        .tx-op:hover { border-color: var(--azul); background: #f2f8fc; }
+        .tx-op b { font-size: 17px; color: var(--azul); }
+        .tx-op small { color: var(--gris); }
+        .tx-ico { display: block; border: 3px solid var(--tinta); border-radius: 6px; background: linear-gradient(135deg, var(--verde-claro), #fff); }
+        .tx-h { width: 64px; height: 36px; } .tx-v { width: 30px; height: 52px; }
+        .tx-check { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-size: 14px; }
+        .tx-ayuda { margin-top: 12px; font-size: 14px; }
+        .tx-ayuda summary { cursor: pointer; font-weight: 700; color: var(--azul); }
+        .tx-ayuda ol { padding-left: 20px; margin: 8px 0 0; display: flex; flex-direction: column; gap: 6px; }
+        .verif-vivo { margin-top: 6px; }
+
+        .vivo-cab { display: none; }
+
+        /* =========================================================
+           PANTALLA DE TRANSMISIÓN (bolillero.html?vivo=1)
+           Escenario de tamaño fijo (1920x1080 o 1080x1920) que se
+           escala para ocupar la ventana: siempre se ve igual.
+           ========================================================= */
+        body.vivo {
+            height: 100vh; overflow: hidden; cursor: none; display: block;
+            background: radial-gradient(ellipse at 30% 20%, #ffffff 0, #eef6da 45%, #d6e8a8 100%);
+        }
+        body.vivo.croma { background: #00b140; }
+        body.vivo .topbar, body.vivo .btn-girar, body.vivo .controles, body.vivo .atajos,
+        body.vivo .premios-cab .btn, body.vivo .toast { display: none !important; }
+        body.vivo .juego {
+            position: absolute; left: 50%; top: 50%; margin: 0; max-width: none;
+            transform: translate(-50%, -50%) scale(var(--escala, 1)); transform-origin: center;
+            display: grid; padding: 28px; gap: 24px; min-height: 0; height: auto; flex: none;
+        }
+        body.vivo .panel { border-radius: 22px; padding: 22px; box-shadow: 0 10px 30px rgba(20, 50, 20, .16); }
+        body.vivo .panel h2 { font-size: 28px; }
+        body.vivo .vivo-cab {
+            grid-area: cab; display: flex; align-items: center; gap: 22px; padding: 0 28px;
+            background: linear-gradient(90deg, var(--azul-osc), var(--azul)); color: #fff; border-radius: 22px;
+            box-shadow: 0 10px 30px rgba(20, 50, 20, .2);
+        }
+        body.vivo .vivo-marca { font-size: 46px; font-weight: 900; letter-spacing: 2px; margin-right: auto; white-space: nowrap; }
+        body.vivo .vivo-marca span { color: #c6ec4a; }
+        body.vivo .vivo-dato { font-size: 30px; font-weight: 700; white-space: nowrap; }
+        body.vivo .vivo-dato b { font-size: 48px; font-weight: 900; color: #fff; }
+        body.vivo .vivo-dato small { font-size: 26px; opacity: .8; }
+        body.vivo .vivo-fase { font-size: 26px; font-weight: 900; background: #fff; color: var(--azul-osc); padding: 8px 20px; border-radius: 99px; white-space: nowrap; }
+        body.vivo .vivo-fase.sale { background: #6a1b9a; color: #fff; }
+        body.vivo .vivo-fase.bingo { background: #fde8e7; color: #b42318; }
+        body.vivo .vivo-fase.linea { background: #fff3cd; color: #8a6100; }
+        body.vivo .vivo-fase.fin { background: var(--tinta); color: #fff; }
+        body.vivo .vivo-envivo { display: flex; align-items: center; gap: 10px; background: #e53935; color: #fff; font-weight: 900; font-size: 24px; padding: 8px 18px; border-radius: 10px; letter-spacing: 1px; }
+        body.vivo .vivo-envivo i { width: 14px; height: 14px; border-radius: 50%; background: #fff; animation: titila 1.2s ease-in-out infinite; }
+        body.vivo .tablero-cab { display: none; }
+        body.vivo .sorteo { justify-content: space-evenly; gap: 18px; min-height: 0; }
+        body.vivo .contador { font-size: 30px; }
+        body.vivo .ultimas-box h3 { font-size: 24px; display: block; }
+        body.vivo .mini { --t: 62px; }
+        body.vivo .tablero { grid-template-rows: repeat(9, minmax(0, 1fr)); gap: 10px; }
+        body.vivo .casilla { aspect-ratio: auto; border-radius: 12px; font-size: 50px; }
+        body.vivo .casilla.ultima { box-shadow: 0 0 0 6px var(--tinta); }
+        body.vivo .estado { display: flex; flex-direction: column; gap: 24px; min-height: 0; }
+        body.vivo .estado .panel { display: flex; flex-direction: column; min-height: 0; }
+        body.vivo .estado .panel:last-child { flex: 1; }
+        body.vivo .premios-cab { margin-bottom: 14px; }
+        body.vivo .grupo-cab { font-size: 22px; }
+        body.vivo .grupo-lim { font-size: 18px; }
+        body.vivo .grupo-lim b { font-size: 24px; }
+        body.vivo .premio { padding: 12px 14px; }
+        body.vivo .premio .badge { font-size: 18px; min-width: 150px; padding: 6px 12px; }
+        body.vivo .premio .monto { font-size: 30px; }
+        body.vivo .premio .quien { font-size: 19px; }
+        body.vivo .premios-int { display: flex; flex-direction: column; }
+        body.vivo .premios-int .premio { grid-template-columns: auto 1fr; }
+        body.vivo .lista { max-height: none; flex: 1; min-height: 0; overflow: hidden; }
+        body.vivo .lista .vacio { font-size: 20px; }
+        body.vivo .nro-carton { font-size: 30px; padding: 8px 16px; }
+
+        /* Horizontal 16:9 — 1920 x 1080 */
+        body.vivo.horizontal .juego {
+            width: 1920px; height: 1080px;
+            grid-template-columns: 470px minmax(0, 1fr) 470px;
+            grid-template-rows: 100px minmax(0, 1fr);
+            grid-template-areas: "cab cab cab" "sorteo tablero estado";
+        }
+        body.vivo.horizontal .escena { flex-direction: column; gap: 18px; --m: 10px; --b: 330px; }
+
+        /* Vertical 9:16 — 1080 x 1920 */
+        body.vivo.vertical .juego {
+            width: 1080px; height: 1920px;
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: 120px 440px minmax(0, 1fr) 560px;
+            grid-template-areas: "cab" "sorteo" "tablero" "estado";
+        }
+        body.vivo.vertical .vivo-cab { gap: 16px; padding: 0 22px; }
+        body.vivo.vertical .vivo-marca { font-size: 40px; }
+        body.vivo.vertical .vivo-dato { display: none; }
+        body.vivo.vertical .vivo-fase { font-size: 22px; padding: 6px 14px; }
+        body.vivo.vertical .vivo-envivo { font-size: 20px; padding: 6px 12px; }
+        body.vivo.vertical .sorteo { display: grid; grid-template-columns: auto 1fr; grid-template-rows: 1fr auto auto; align-items: center; justify-items: center; gap: 10px 24px; }
+        body.vivo.vertical .escena { grid-row: 1 / -1; --m: 10px; --b: 300px; gap: 26px; width: auto; }
+        body.vivo.vertical .contador { grid-column: 2; grid-row: 1; align-self: end; font-size: 34px; }
+        body.vivo.vertical .ultimas-box { grid-column: 2; grid-row: 2 / 4; align-self: start; }
+        body.vivo.vertical .ultimas { flex-wrap: wrap; max-width: 330px; }
+        body.vivo.vertical .casilla { font-size: 46px; }
+        body.vivo.vertical .tablero { gap: 9px; }
+        body.vivo.vertical .estado { display: grid; grid-template-columns: 1.35fr 1fr; gap: 24px; }
+        body.vivo.vertical .premio .badge { min-width: 120px; font-size: 16px; }
+        body.vivo.vertical .premio .monto { font-size: 26px; }
+        body.vivo.vertical .premio .quien { font-size: 17px; }
+        body.vivo.vertical .grupo-cab { font-size: 19px; }
+        body.vivo.vertical .grupo-lim { font-size: 16px; }
+
+        /* Carteles de ganador en la transmisión: también escalados */
+        body.vivo .modal { padding: 0; }
+        body.vivo .modal-caja { width: 1300px; max-height: none; overflow: visible; padding: 36px; transform: scale(var(--escala, 1)); flex: none; }
+        body.vivo.vertical .modal-caja { width: 960px; }
+        body.vivo .celebra h3 { font-size: 96px; }
+        body.vivo .celebra .sub { font-size: 30px; }
+        body.vivo .premio-monto { font-size: 54px; }
+        body.vivo .ganadores-cartones { grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: 20px; }
+        body.vivo.vertical .ganadores-cartones { grid-template-columns: 1fr; }
+        body.vivo .ganadores-cartones .carton-cab { font-size: 26px; padding: 8px 14px; }
+        body.vivo .ganadores-cartones .carton-pie { font-size: 20px; }
+        body.vivo .ganadores-cartones .badge { font-size: 18px; }
+        body.vivo #btnCerrarGanador { display: none; }
+        body.vivo .verif-titulo { font-size: 34px; color: var(--azul); margin: -6px 0 12px; font-weight: 800; }
+        @keyframes titila { 50% { opacity: .2; } }
         @keyframes girar { to { transform: rotate(360deg); } }
         @keyframes temblor { 0%,100% { transform: translate(0,0) } 25% { transform: translate(-2px,1px) } 75% { transform: translate(2px,-1px) } }
         @keyframes rebote { to { transform: translate(var(--dx), var(--dy)); } }
@@ -302,6 +438,7 @@
 
 <header class="topbar">
     <div class="marca">BINGO <span>VIRTUAL</span></div>
+ <button class="btn btn-chico btn-vivo" id="btnTransmitir" title="Pantalla limpia para transmitir en vivo"><span class="ico">📡</span><span class="txt">Transmitir</span></button>
     <button class="btn btn-chico" id="btnVerificar" title="Verificar cartón"><span class="ico">🔎</span><span class="txt">Verificar cartón</span></button>
     <a class="btn btn-chico" href="registrar_cartones.html" title="Cartones"><span class="ico">🎟️</span><span class="txt">Cartones</span></a>
     <button class="btn btn-chico" id="btnPantalla" title="Pantalla completa (F)"><span class="ico">⛶</span><span class="txt">Pantalla completa</span></button>
@@ -310,6 +447,13 @@
 </header>
 
 <main class="juego">
+    <!-- Encabezado que sólo se ve en la pantalla de transmisión -->
+    <div class="vivo-cab">
+        <div class="vivo-marca">BINGO <span>VIRTUAL</span></div>
+        <div class="vivo-dato">Bolilla <b id="vivoNro">0</b><small>/90</small></div>
+        <div class="vivo-fase" id="vivoFase"></div>
+        <div class="vivo-envivo"><i></i>EN VIVO</div>
+    </div>
     <section class="panel sorteo">
         <div class="escena">
             <div class="maquina" id="maquina" aria-hidden="true">
@@ -370,6 +514,40 @@
     </div>
 </div>
 
+<!-- Transmitir -->
+<div class="modal" id="modalTransmitir">
+    <div class="modal-caja" style="width:min(620px,100%)">
+        <h3>📡 Transmitir en vivo</h3>
+        <p style="margin:0 0 12px">Se abre una <b>ventana limpia</b> (sin botones) con el bolillero, el tablero y los premios. Esa ventana es la que capturás para la transmisión. El juego lo seguís manejando desde esta pestaña y la ventana se actualiza sola.</p>
+        <div class="tx-opciones">
+            <button class="tx-op" data-formato="horizontal">
+                <span class="tx-ico tx-h"></span>
+                <b>Horizontal 16:9</b>
+                <small>YouTube, Facebook, Twitch, Kick, Zoom, Meet, StreamYard</small>
+            </button>
+            <button class="tx-op" data-formato="vertical">
+                <span class="tx-ico tx-v"></span>
+                <b>Vertical 9:16</b>
+                <small>TikTok, Instagram, Facebook/YouTube desde el celular</small>
+            </button>
+        </div>
+        <label class="tx-check"><input type="checkbox" id="txPortada" checked> Empezar mostrando la portada (pasa sola al bolillero con la primera bolilla)</label>
+        <label class="tx-check"><input type="checkbox" id="txVerde"> Fondo verde para croma (chroma key)</label>
+        <details class="tx-ayuda">
+            <summary>¿Cómo la capturo?</summary>
+            <ol>
+                <li><b>OBS / Streamlabs:</b> agregá una fuente «Captura de ventana» y elegí la ventana <i>«Bingo Virtual – EN VIVO»</i>. Para el audio (voz y sonidos), capturá el audio del escritorio.</li>
+                <li><b>StreamYard, Zoom, Meet, Teams:</b> «Compartir pantalla» y elegí esa ventana (o pestaña, tildando «compartir audio»).</li>
+                <li><b>TikTok / Instagram desde la PC:</b> usá OBS con el formato vertical 1080×1920.</li>
+                <li>Agrandá la ventana o ponela en pantalla completa con <kbd>F</kbd> o doble clic: el diseño se ajusta solo y siempre se ve igual.</li>
+            </ol>
+        </details>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+            <button class="btn" id="btnCerrarTx">Cerrar</button>
+        </div>
+    </div>
+</div>
+
 <!-- Verificar cartón -->
 <div class="modal" id="modalVerificar">
     <div class="modal-caja" style="width:min(640px,100%)">
@@ -399,6 +577,23 @@
 <script src="bingo-core.js"></script>
 <script>
     const $ = id => document.getElementById(id);
+
+    /* ---------- Modo transmisión ---------- */
+    const PARAMS = new URLSearchParams(location.search);
+    const VIVO = PARAMS.has('vivo');
+    const FORMATO = PARAMS.get('formato') === 'vertical' ? 'vertical' : 'horizontal';
+    const canal = 'BroadcastChannel' in window ? new BroadcastChannel('bingo-virtual') : null;
+    function emitir(msg) { if (canal && !VIVO) canal.postMessage(msg); }
+    if (VIVO) {
+        document.body.classList.add('vivo', FORMATO);
+        if (PARAMS.get('fondo') === 'verde') document.body.classList.add('croma');
+        document.title = 'Bingo Virtual – EN VIVO';
+        const ajustar = () => {
+            const [w, h] = FORMATO === 'vertical' ? [1080, 1920] : [1920, 1080];
+            document.body.style.setProperty('--escala', Math.min(innerWidth / w, innerHeight / h));
+        };
+        addEventListener('resize', ajustar); ajustar();
+    }
     let estado = Bingo.cargarEstado();
     let girando = false;
     let pendienteSale = false;
@@ -416,6 +611,7 @@
         return audioCtx;
     }
     function tono(freq, ini, dur, tipo = 'sine', vol = .2) {
+        if (VIVO) return;
         const a = ctx(); if (!a) return;
         const o = a.createOscillator(), g = a.createGain();
         o.type = tipo; o.frequency.value = freq;
@@ -433,6 +629,7 @@
 
     const DIGITOS = ['cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
     function decir(texto) {
+        if (VIVO) return;
         if (!prefs.voz || !('speechSynthesis' in window)) return;
         speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(texto);
@@ -498,6 +695,7 @@
         $('btnGirar').disabled = girando || estado.numbers.length === 0;
         $('btnDeshacer').disabled = girando || total === 0;
 
+        $('vivoNro').textContent = total;
         const fase = $('fase');
         fase.className = 'fase';
         if (estado.numbers.length === 0) { fase.textContent = 'Bolillero vacío'; fase.classList.add('fin'); }
@@ -506,6 +704,9 @@
         else if (estado.lineaGanada) { fase.textContent = 'Jugando por BINGO' + (limite() ? ` · hasta bolilla ${limite()}` : ''); fase.classList.add('bingo'); }
         else if (estado.cuaternoGanado) { fase.textContent = 'Jugando por LÍNEA'; fase.classList.add('linea'); }
         else fase.textContent = 'Jugando por CUATERNO';
+
+        $('vivoFase').textContent = fase.textContent;
+        $('vivoFase').className = 'vivo-fase ' + [...fase.classList].filter(c => c !== 'fase').join(' ');
 
         // Cerca de ganar
         const cartones = Bingo.cargarCartones();
@@ -608,8 +809,9 @@
     }
 
     function girar() {
-        if (girando || estado.numbers.length === 0 || modalAbierto()) return;
+        if (VIVO || girando || estado.numbers.length === 0 || modalAbierto()) return;
         girando = true;
+        emitir({ t: 'girando' });
         dibujarEstado();
         const maq = $('maquina');
         maq.classList.add('girando');
@@ -636,7 +838,7 @@
     }
 
     function deshacer() {
-        if (girando || !estado.drawnNumbers.length) return;
+        if (VIVO || girando || !estado.drawnNumbers.length) return;
         const n = estado.drawnNumbers.pop();
         estado.numbers.push(n);
         const total = estado.drawnNumbers.length;
@@ -691,6 +893,7 @@
             return c ? Bingo.htmlCarton(c, estado.drawnNumbers, g.numeroBola) : '';
         }).join('');
         $('modalGanador').classList.add('abierto');
+        emitirCartel(true);
         sonidoPremio();
         const nombres = lista.map(g => `cartón ${g.numero}, ${g.comprador || ''}`).join('; ');
         setTimeout(() => decir(`¡${{ cuaterno: 'Cuaterno', linea: 'Línea', bingo: 'Bingo', saleosale: 'Bingo' }[tipo]}! ${nombres}`), 700);
@@ -703,11 +906,16 @@
         $('ganPremio').textContent = premios.saleosale ? '🎁 ' + premios.saleosale : '';
         $('ganCartones').innerHTML = '';
         $('modalGanador').classList.add('abierto');
+        emitirCartel(false);
         sonidoPremio();
         setTimeout(() => decir(`No salió el bingo. ¡Ahora se juega sale o sale!`), 500);
     }
+    function emitirCartel(conConfeti) {
+        emitir({ t: 'cartel', titulo: $('ganTitulo').textContent, sub: $('ganSub').textContent, premio: $('ganPremio').textContent, cartones: $('ganCartones').innerHTML, confeti: conConfeti });
+    }
     function cerrarGanador() {
         $('modalGanador').classList.remove('abierto');
+        emitir({ t: 'cerrar' });
         if (pendienteSale && !estado.bingoGanado) { setTimeout(anunciarSale, 300); return; }
         pendienteSale = false;
         if (autoTimer && !estado.bingoGanado) programarAuto();
@@ -739,7 +947,8 @@
         const res = cartones.filter(c => String(c.numero) === q || (c.comprador || '').toLowerCase().includes(q)).slice(0, 12);
         const ultima = estado.drawnNumbers[estado.drawnNumbers.length - 1];
         $('verifRes').innerHTML = res.length
-            ? res.map(c => Bingo.htmlCarton(c, estado.drawnNumbers, ultima)).join('')
+            ? res.map(c => Bingo.htmlCarton(c, estado.drawnNumbers, ultima)
+                + `<button class="btn btn-chico btn-vivo verif-vivo" data-id="${Bingo.escapar(c.id)}">📡 Mostrar en la transmisión</button>`).join('')
             : '<p style="margin:0">No se encontró ningún cartón.</p>';
     }
 
@@ -763,6 +972,32 @@
     $('btnVerificar').onclick = abrirVerificar;
     $('btnCerrarVerif').onclick = () => $('modalVerificar').classList.remove('abierto');
     $('verifInput').oninput = verificar;
+    let mostrandoVerif = false;
+    $('verifRes').addEventListener('click', e => {
+        const b = e.target.closest('.verif-vivo'); if (!b) return;
+        const c = Bingo.cargarCartones().find(c => c.id === b.dataset.id); if (!c) return;
+        const ultima = estado.drawnNumbers[estado.drawnNumbers.length - 1];
+        emitir({ t: 'cartel', titulo: '🔎 Verificación', sub: `Cartón N° ${c.numero} · ${c.comprador || ''}`, premio: '', cartones: Bingo.htmlCarton(c, estado.drawnNumbers, ultima), confeti: false });
+        mostrandoVerif = true;
+        toast('Se está mostrando en la transmisión. Al cerrar «Verificar» se quita.');
+    });
+    $('btnCerrarVerif').addEventListener('click', () => { if (mostrandoVerif) { emitir({ t: 'cerrar' }); mostrandoVerif = false; } });
+
+    // Ventana de transmisión
+    $('btnTransmitir').onclick = () => $('modalTransmitir').classList.add('abierto');
+    $('btnCerrarTx').onclick = () => $('modalTransmitir').classList.remove('abierto');
+    document.querySelectorAll('.tx-op').forEach(b => b.onclick = () => {
+        const vert = b.dataset.formato === 'vertical';
+        const q = new URLSearchParams({ vivo: '1' });
+        if (vert) q.set('formato', 'vertical');
+        if ($('txVerde').checked) q.set('fondo', 'verde');
+        const pagina = $('txPortada').checked && !estado.drawnNumbers.length ? 'index.html' : 'bolillero.html';
+        const h = Math.min(screen.availHeight - 80, vert ? 1000 : 720);
+        const w = vert ? Math.round(h * 9 / 16) : Math.round(h * 16 / 9);
+        const win = window.open(`${pagina}?${q}`, 'bingo-vivo', `popup=yes,width=${w},height=${h}`);
+        if (!win) toast('El navegador bloqueó la ventana: permití las ventanas emergentes para este sitio.');
+        $('modalTransmitir').classList.remove('abierto');
+    });
     function pantallaCompleta() {
         if (document.fullscreenElement) document.exitFullscreen();
         else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
@@ -770,6 +1005,7 @@
     $('btnPantalla').onclick = pantallaCompleta;
 
     document.addEventListener('keydown', e => {
+        if (VIVO) { if (e.key === 'f' || e.key === 'F') pantallaCompleta(); return; }
         if (e.key === 'Escape') {
             if ($('modalGanador').classList.contains('abierto')) cerrarGanador();
             document.querySelectorAll('.modal.abierto').forEach(m => m.classList.remove('abierto'));
@@ -787,17 +1023,39 @@
     // Si se editan cartones en otra pestaña, actualizar paneles
     window.addEventListener('storage', e => {
         if (e.key === 'cartones') dibujarEstado();
-        if (e.key === 'bingoState') { estado = Bingo.cargarEstado(); dibujarTodo(false); }
+        if (e.key === 'bingoState') {
+            const antes = estado.drawnNumbers.length;
+            estado = Bingo.cargarEstado();
+            $('maquina').classList.remove('girando');
+            dibujarTodo(VIVO && estado.drawnNumbers.length > antes);
+            if (VIVO && !estado.drawnNumbers.length) $('modalGanador').classList.remove('abierto');
+        }
         if (e.key === 'bingoPremios') { Object.assign(premios, JSON.parse(e.newValue || '{}')); dibujarEstado(); }
         if (e.key === 'bingoPrefs') {
             const antes = prefs.velocidad;
             Object.assign(prefs, JSON.parse(e.newValue || '{}'));
             if (!prefs.voz && 'speechSynthesis' in window) speechSynthesis.cancel();
             if (antes !== prefs.velocidad && autoTimer && autoTimer !== -1 && !girando && !modalAbierto()) programarAuto();
-            toast('Configuración actualizada');
+            if (!VIVO) toast('Configuración actualizada');
         }
     });
     if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = () => { };
+
+    if (VIVO) {
+        if (canal) canal.onmessage = ({ data: m }) => {
+            if (m.t === 'girando') { $('maquina').classList.add('girando'); setTimeout(() => $('maquina').classList.remove('girando'), 2500); }
+            else if (m.t === 'cartel') {
+                $('ganTitulo').textContent = m.titulo; $('ganSub').textContent = m.sub;
+                $('ganPremio').textContent = m.premio; $('ganCartones').innerHTML = m.cartones;
+                $('modalGanador').classList.add('abierto');
+                if (m.confeti) confeti();
+            }
+            else if (m.t === 'cerrar') $('modalGanador').classList.remove('abierto');
+        };
+        document.addEventListener('dblclick', pantallaCompleta);
+    }
+
+    if (!VIVO && location.hash === '#transmitir') { $('modalTransmitir').classList.add('abierto'); history.replaceState(null, '', location.pathname); }
 
     dibujarTodo(false);
 </script>

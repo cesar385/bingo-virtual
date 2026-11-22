@@ -5,81 +5,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Bingo Virtual</title>
     <style>
+        * { box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
+            font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
             background-color: #e9f5d8;
             margin: 0;
-            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             min-height: 100dvh;
             padding: 16px;
-            box-sizing: border-box;
         }
-
         .container {
             text-align: center;
             background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(26, 60, 30, .12);
             padding: clamp(12px, 3vw, 24px);
             max-width: min(900px, 140vh);
             width: 100%;
-            box-sizing: border-box;
         }
-
         .container img {
             display: block;
             width: 100%;
-            max-height: calc(100dvh - 140px);
+            max-height: calc(100dvh - 160px);
             object-fit: contain;
-            height: auto;
             border-radius: 10px;
         }
-
-        h1 {
-            color: #0056A6;
-            font-size: 3em;
-            margin: 20px 0;
+        .botones { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: clamp(10px, 2vh, 20px); }
+        .start-button, .tx-button {
+            border: none; padding: 15px 30px; border-radius: 10px; cursor: pointer; font-weight: 800;
+            font-size: clamp(1.05em, 2.3vw, 1.3em); text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+            transition: background-color .3s ease;
         }
+        .start-button { background-color: #7DBE34; color: #fff; width: min(100%, 340px); }
+        .start-button:hover { background-color: #66a72d; }
+        .tx-button { background: #fde8e7; color: #b42318; }
+        .tx-button:hover { background: #fbd3d0; }
 
-        h2 {
-            color: #7DBE34;
-            font-size: 2.5em;
-            margin: 10px 0;
+        /* ---------- Portada para transmisión en vivo (index.html?vivo=1) ---------- */
+        .vivo-extra { display: none; }
+        body.vivo { padding: 0; overflow: hidden; cursor: none; height: 100vh;
+            background: radial-gradient(ellipse at 30% 20%, #ffffff 0, #eef6da 45%, #d6e8a8 100%); }
+        body.vivo.croma { background: #00b140; }
+        body.vivo .botones { display: none; }
+        body.vivo .container {
+            position: absolute; left: 50%; top: 50%; max-width: none; padding: 40px;
+            width: 1500px; transform: translate(-50%, -50%) scale(var(--escala, 1));
+            border-radius: 30px; box-shadow: 0 20px 60px rgba(20, 50, 20, .2);
         }
-
-        .start-button {
-            background-color: #7DBE34;
-            color: #fff;
-            border: none;
-            padding: 15px 30px;
-            font-size: clamp(1.1em, 2.5vw, 1.4em);
-            width: min(100%, 340px);
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            margin-top: clamp(10px, 2vh, 20px);
-        }
-
-        .start-button:hover {
-            background-color: #66a72d;
-        }
+        body.vivo.vertical .container { width: 960px; }
+        body.vivo .container img { max-height: none; }
+        body.vivo .vivo-extra { display: flex; flex-direction: column; align-items: center; gap: 18px; margin-top: 24px; }
+        .envivo { display: inline-flex; align-items: center; gap: 12px; background: #e53935; color: #fff; font-weight: 900;
+            font-size: 34px; padding: 10px 24px; border-radius: 12px; letter-spacing: 2px; }
+        .envivo i { width: 18px; height: 18px; border-radius: 50%; background: #fff; animation: titila 1.2s ease-in-out infinite; }
+        .espera { font-size: 52px; font-weight: 900; color: #0f5a85; }
+        .espera span { display: inline-block; animation: salto 1.4s ease-in-out infinite; }
+        .espera span:nth-child(2) { animation-delay: .2s; } .espera span:nth-child(3) { animation-delay: .4s; }
+        body.vivo.vertical .espera { font-size: 46px; }
+        @keyframes titila { 50% { opacity: .2; } }
+        @keyframes salto { 50% { transform: translateY(-10px); } }
     </style>
 </head>
 <body>
 
     <div class="container">
         <img src="INICIAR.png" alt="Bingo Virtual">
-        <button class="start-button" onclick="startBingo()">INICIAR</button>
+        <div class="botones">
+            <button class="start-button" onclick="location.href='bolillero.html'">INICIAR</button>
+            <a class="tx-button" href="bolillero.html#transmitir">📡 Transmitir en vivo</a>
+        </div>
+        <div class="vivo-extra">
+            <div class="envivo"><i></i>EN VIVO</div>
+            <div class="espera">¡En instantes comenzamos<span>.</span><span>.</span><span>.</span></div>
+        </div>
     </div>
 
     <script>
-        function startBingo() {
-            // Redirige a la página local "bolillero.html" en la misma carpeta
-            window.location.href = 'bolillero.html';
+        // Portada para la transmisión: se queda esperando y pasa sola al bolillero
+        // cuando se gira la primera bolilla desde la pestaña de control.
+        const params = new URLSearchParams(location.search);
+        if (params.has('vivo')) {
+            const vertical = params.get('formato') === 'vertical';
+            document.body.classList.add('vivo', vertical ? 'vertical' : 'horizontal');
+            if (params.get('fondo') === 'verde') document.body.classList.add('croma');
+            document.title = 'Bingo Virtual – EN VIVO';
+            const ajustar = () => {
+                const [w, h] = vertical ? [1080, 1920] : [1920, 1080];
+                document.body.style.setProperty('--escala', Math.min(innerWidth / w, innerHeight / h));
+            };
+            addEventListener('resize', ajustar); ajustar();
+            const irAlBolillero = () => location.replace('bolillero.html' + location.search);
+            addEventListener('storage', e => {
+                if (e.key === 'bingoState') {
+                    try { if ((JSON.parse(e.newValue) || {}).drawnNumbers?.length) irAlBolillero(); } catch (err) { }
+                }
+            });
+            if ('BroadcastChannel' in window) new BroadcastChannel('bingo-virtual').onmessage = ({ data }) => { if (data.t === 'girando') irAlBolillero(); };
+            const pantallaCompleta = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
+            document.addEventListener('dblclick', pantallaCompleta);
+            document.addEventListener('keydown', e => { if (e.key === 'f' || e.key === 'F') pantallaCompleta(); });
         }
     </script>
 
