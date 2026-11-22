@@ -191,6 +191,8 @@
         .lista li { display: flex; gap: 6px 8px; align-items: center; flex-wrap: wrap; padding: 7px 10px; border-radius: 10px; background: #f6f9ef; font-size: 14px; }
         .lista li b { color: var(--azul); }
         .lista .vacio { background: none; color: var(--gris); font-style: italic; }
+        .lista .cerca-nros { background: none; padding: 0; gap: 6px; }
+        .nro-carton { background: #fde8e7; color: #b42318; font-weight: 900; font-size: clamp(15px, 2vh, 20px); padding: 6px 12px; border-radius: 10px; }
         .lista .falta { margin-left: auto; font-weight: 800; color: var(--rojo); white-space: nowrap; }
 
         @media (hover: none) { .atajos { display: none; } }
@@ -557,14 +559,14 @@
                 // Sólo se indica CUÁNTOS números faltan, nunca cuáles
                 if (premio === 'cuaterno' && p.maxFila === 3) cerca.push({ c, falta: 1 });
                 else if (premio === 'linea' && p.maxFila === 4) cerca.push({ c, falta: 1 });
-                else if ((premio === 'bingo' || premio === 'saleosale') && p.faltan.length <= 2) cerca.push({ c, falta: p.faltan.length });
+                else if ((premio === 'bingo' || premio === 'saleosale') && p.faltan.length === 1) cerca.push({ c, falta: 1 });
             });
         }
         cerca.sort((a, b) => a.falta - b.falta || (+a.c.numero) - (+b.c.numero));
         $('listaCerca').innerHTML = cartones.length === 0
             ? '<li class="vacio">No hay cartones cargados. <a href="registrar_cartones.html">Cargar cartones</a></li>'
             : cerca.length
-                ? cerca.map(x => `<li><b>N° ${Bingo.escapar(x.c.numero)}</b> ${Bingo.escapar(x.c.comprador)}<span class="falta">${x.falta === 1 ? 'le falta 1' : 'le faltan ' + x.falta}</span></li>`).join('')
+                ? `<li class="cerca-nros">${cerca.map(x => `<span class="nro-carton" title="${Bingo.escapar(x.c.comprador)}">N° ${Bingo.escapar(x.c.numero)}</span>`).join('')}</li>`
                 : (premio ? `<li class="vacio">Nadie está cerca del ${NOMBRE[premio]} todavía.</li>` : '<li class="vacio">Juego terminado.</li>');
 
         dibujarPremios();
