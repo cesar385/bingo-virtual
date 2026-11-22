@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Bingo Virtual - Cartones</title>
     <link rel="stylesheet" href="bingo.css">
     <style>
@@ -10,28 +10,31 @@
             display: grid; grid-template-columns: minmax(330px, 420px) 1fr; gap: 18px;
             padding: 18px; max-width: 1500px; margin: 0 auto; align-items: start;
         }
-        @media (max-width: 900px) { .pagina { grid-template-columns: 1fr; padding: 10px; } }
-        .form-panel { position: sticky; top: 76px; }
-        @media (max-width: 900px) { .form-panel { position: static; } }
+        .pagina > * { min-width: 0; }
+        @media (max-width: 900px) { .pagina { grid-template-columns: 1fr; padding: 10px; gap: 14px; } }
+        @media (min-width: 901px) and (max-width: 1150px) { .pagina { grid-template-columns: 320px 1fr; } }
+        .form-panel { position: sticky; top: 72px; max-height: calc(100dvh - 84px); overflow: auto; }
+        @media (max-width: 900px) { .form-panel { position: static; max-height: none; } }
 
         .campo { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
         .campo label { font-size: 13px; font-weight: 700; color: var(--gris); }
-        .fila2 { display: grid; grid-template-columns: 1fr 110px; gap: 8px; }
+        .fila2 { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 8px; }
+        .campo input { width: 100%; }
 
         .tabs { display: flex; gap: 4px; background: #eef3e2; padding: 4px; border-radius: 10px; margin-bottom: 10px; }
         .tabs button { flex: 1; border: 0; background: none; padding: 7px; border-radius: 8px; font-weight: 700; cursor: pointer; color: var(--gris); }
         .tabs button.activo { background: #fff; color: var(--azul); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
 
-        .editor { display: grid; grid-template-columns: repeat(9, 1fr); gap: 3px; border: 2px solid var(--verde); border-radius: 10px; padding: 5px; }
+        .editor { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 3px; border: 2px solid var(--verde); border-radius: 10px; padding: 5px; }
         .editor input {
-            width: 100%; aspect-ratio: 1/1; text-align: center; padding: 0; border-radius: 6px;
-            border: 1.5px solid var(--borde); font-weight: 800; font-size: 16px; -moz-appearance: textfield;
+            width: 100%; min-width: 0; aspect-ratio: 1/1; text-align: center; padding: 0; border-radius: 6px;
+            border: 1.5px solid var(--borde); font-weight: 800; font-size: clamp(13px, 4vw, 17px); -moz-appearance: textfield;
         }
         .editor input::-webkit-outer-spin-button, .editor input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        .editor input::placeholder { font-size: 9px; color: #b5c0a8; font-weight: 400; }
+        .editor input::placeholder { font-size: clamp(7px, 2vw, 9px); color: #b5c0a8; font-weight: 400; }
         .editor input.lleno { background: #eaf4fb; border-color: var(--azul); }
         .editor input.mal { background: #fde8e7; border-color: var(--rojo); }
-        .editor-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--gris); margin-top: 6px; }
+        .editor-info { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--gris); margin-top: 6px; }
         .editor-info span.ok { color: var(--verde-osc); font-weight: 700; }
         textarea {
             width: 100%; min-height: 110px; font: inherit; padding: 10px; border-radius: 10px;
@@ -41,7 +44,8 @@
         .ayuda { font-size: 12px; color: var(--gris); margin: 6px 0 0; }
 
         .acciones { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-        .acciones .btn-verde { flex: 1; font-size: 16px; padding: 11px; }
+        .acciones .btn-verde { flex: 1 1 100%; font-size: 16px; padding: 12px; }
+        .acciones .btn:not(.btn-verde) { flex: 1; }
         .mensajes { margin-top: 10px; font-size: 14px; }
         .mensajes .err { background: #fde8e7; color: #b42318; padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; }
         .mensajes .avi { background: #fff3cd; color: #8a6100; padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; }
@@ -52,12 +56,15 @@
         .lote-fila { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 
         .barra-lista { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
-        .barra-lista input[type=search] { flex: 1; min-width: 180px; }
-        .stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
-        .stat { background: #fff; border-radius: 12px; padding: 10px 14px; box-shadow: var(--sombra); min-width: 110px; }
-        .stat b { display: block; font-size: 24px; color: var(--azul); }
-        .stat span { font-size: 12px; color: var(--gris); }
-        .cartones { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; align-items: start; }
+        .barra-lista input[type=search] { flex: 1 1 220px; min-width: 0; }
+        .barra-lista select { flex: 0 1 190px; }
+        @media (max-width: 600px) { .barra-lista .btn { flex: 1; padding: 8px 6px; font-size: 13px; } .barra-lista select { flex: 1 1 100%; } }
+        .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; max-width: 640px; }
+        .stat { background: #fff; border-radius: 12px; padding: 10px 12px; box-shadow: var(--sombra); min-width: 0; }
+        .stat b { display: block; font-size: clamp(18px, 4vw, 24px); color: var(--azul); }
+        .stat span { font-size: 12px; color: var(--gris); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .cartones { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); gap: 14px; align-items: start; }
+        @media (min-width: 1700px) { .cartones { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); } }
         .carton-pie .acc { margin-left: auto; display: flex; gap: 4px; }
         .carton-pie .acc button { border: 0; background: #eef3e2; border-radius: 6px; padding: 3px 7px; cursor: pointer; font-size: 13px; }
         .carton-pie .acc button:hover { background: #e2ebcf; }
@@ -79,8 +86,8 @@
 
 <header class="topbar">
     <div class="marca">BINGO <span>VIRTUAL</span></div>
-    <a class="btn btn-azul" href="bolillero.html">🎰 Ir al bolillero</a>
-    <a class="btn" href="index.html">🏠 Inicio</a>
+    <a class="btn btn-azul" href="bolillero.html" title="Ir al bolillero"><span class="ico">🎰</span><span class="txt">Ir al bolillero</span></a>
+    <a class="btn" href="index.html" title="Inicio"><span class="ico">🏠</span><span class="txt">Inicio</span></a>
 </header>
 
 <main class="pagina">
@@ -102,7 +109,7 @@
 
             <div class="tabs">
                 <button type="button" data-tab="grilla" class="activo">Grilla</button>
-                <button type="button" data-tab="texto">Escribir números</button>
+                <button type="button" data-tab="texto">Escribir</button>
             </div>
 
             <div id="tabGrilla">
@@ -187,7 +194,7 @@
             const r = Bingo.rangoColumna(c);
             const inp = document.createElement('input');
             inp.type = 'number'; inp.min = r.min; inp.max = r.max; inp.inputMode = 'numeric';
-            inp.placeholder = `${r.min}-${r.max}`;
+            inp.placeholder = c === 0 ? '1-9' : c + '0';
             inp.dataset.f = f; inp.dataset.c = c;
             inp.setAttribute('aria-label', `Fila ${f + 1}, columna ${r.min} a ${r.max}`);
             inp.addEventListener('input', revisarEditor);

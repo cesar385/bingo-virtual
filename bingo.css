@@ -76,13 +76,13 @@ button { font: inherit; }
 }
 .carton-cab .nro { background: #fff; color: var(--verde-osc); border-radius: 6px; padding: 1px 8px; font-weight: 900; }
 .carton-cab .comp { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.carton-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 2px; padding: 6px; background: #fff; }
-.carton-grid.simple { grid-template-columns: repeat(5, 1fr); }
-.carton-grid.simple .celda { aspect-ratio: 1.8 / 1; font-size: 6.5cqw; }
+.carton-grid { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 2px; padding: 6px; background: #fff; }
+.carton-grid.simple { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.carton-grid.simple .celda { aspect-ratio: 1.8 / 1; font-size: min(6.5cqw, 26px); }
 .celda {
     aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center;
     border-radius: 6px; background: #f4f7ee; font-weight: 800;
-    font-size: 5.4cqw; position: relative;
+    font-size: min(5.4cqw, 24px); position: relative; min-width: 0;
 }
 .celda.vacia { background: repeating-linear-gradient(45deg, #eef3e2, #eef3e2 4px, #e6edd6 4px, #e6edd6 8px); }
 .celda.marcada { background: var(--azul); color: #fff; }
@@ -107,7 +107,7 @@ button { font: inherit; }
 }
 .modal.abierto { display: flex; }
 .modal-caja {
-    background: #fff; border-radius: 18px; padding: 22px; width: min(560px, 100%);
+    background: #fff; border-radius: 18px; padding: clamp(14px, 3vw, 22px); width: min(560px, 100%);
     max-height: 92vh; overflow: auto; box-shadow: 0 20px 60px rgba(0,0,0,.35);
     animation: aparecer .25s ease-out;
 }
@@ -128,3 +128,21 @@ input:focus, select:focus { border-color: var(--azul); }
 
 @keyframes latido { 50% { transform: scale(1.12); } }
 @keyframes aparecer { from { transform: scale(.92); opacity: 0; } }
+
+/* Ajustes generales para pantallas chicas */
+@media (max-width: 600px) {
+    .topbar { padding: 8px 10px; }
+    .marca { font-size: 19px; }
+    .panel { padding: 14px; }
+    .modal { padding: 8px; }
+}
+
+/* Barra superior: en pantallas chicas sólo se ven los íconos */
+.topbar .btn .ico { font-size: 1.05em; }
+@media (max-width: 860px) {
+    .topbar { gap: 4px; padding: 8px 10px; flex-wrap: nowrap; }
+    .topbar .marca { font-size: 18px; }
+    .topbar .btn .txt { display: none; }
+    .topbar .btn { padding: 7px 9px; }
+}
+@media (max-width: 380px) { .topbar .marca { font-size: 15px; letter-spacing: 0; } .topbar .btn { padding: 6px 7px; } }

@@ -2,221 +2,306 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Bingo Virtual - Bolillero</title>
     <link rel="stylesheet" href="bingo.css">
     <style>
+        /* =========================================================
+           Base: celular vertical (una columna, todo apilado)
+           ========================================================= */
         .juego {
-            display: grid; grid-template-columns: minmax(320px, 430px) 1fr; gap: 18px;
-            padding: 18px; max-width: 1500px; margin: 0 auto;
+            display: grid; gap: 12px; padding: 10px;
+            grid-template-areas: "sorteo" "tablero" "estado";
+            max-width: 1800px; margin: 0 auto;
         }
-        @media (max-width: 900px) { .juego { grid-template-columns: 1fr; padding: 10px; } }
+        .juego > * { min-width: 0; }
+        .sorteo { grid-area: sorteo; }
+        .panel-tablero { grid-area: tablero; display: flex; flex-direction: column; }
+        .estado { grid-area: estado; display: grid; gap: 12px; }
 
-        /* ---- Bolillero (globo) ---- */
-        .sorteo { display: flex; flex-direction: column; align-items: center; gap: 14px; }
-        .maquina { position: relative; width: 250px; height: 250px; margin-top: 4px; }
+        /* ---- Escena: bolillero + bolilla, uno al lado del otro ---- */
+        .sorteo { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .escena {
+            display: flex; align-items: center; justify-content: center; gap: 4%;
+            width: 100%;
+            --m: clamp(5px, 1.9vw, 8px);          /* escala del bolillero */
+            --b: clamp(100px, 33vw, 170px);       /* tamaño de la bolilla */
+        }
+
+        /* Bolillero (dibujado en "em": se escala cambiando --m) */
+        .maquina { position: relative; font-size: var(--m); width: 25em; height: 25em; flex: none; }
         .globo {
-            position: absolute; inset: 0 25px 50px; border-radius: 50%;
+            position: absolute; inset: 0 2.5em 5em; border-radius: 50%;
             background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.9), rgba(220,235,245,.5) 45%, rgba(26,125,181,.18));
-            border: 5px solid #253642; overflow: hidden;
-            box-shadow: inset 0 -12px 25px rgba(0,0,0,.12), 0 8px 18px rgba(0,0,0,.15);
+            border: .5em solid #253642; overflow: hidden;
+            box-shadow: inset 0 -1.2em 2.5em rgba(0,0,0,.12), 0 .8em 1.8em rgba(0,0,0,.15);
         }
-        .alambres { position: absolute; inset: -5px; border-radius: 50%; pointer-events: none; z-index: 3; }
-        .alambres i {
-            position: absolute; inset: 0; border: 3px solid #253642; border-radius: 50%;
-            opacity: .85;
-        }
+        .alambres { position: absolute; inset: 0 2.5em 5em; border-radius: 50%; pointer-events: none; z-index: 3; }
+        .alambres i { position: absolute; inset: 0; border: .3em solid #253642; border-radius: 50%; opacity: .85; }
         .alambres i:nth-child(1) { transform: scaleX(.35); }
         .alambres i:nth-child(2) { transform: scaleX(.7); }
         .alambres i:nth-child(3) { transform: scaleY(.35); }
         .alambres i:nth-child(4) { transform: scaleY(.7); }
-        .girando .alambres { animation: girar .35s linear infinite; }
         .bolitas { position: absolute; inset: 0; }
         .bolita {
-            position: absolute; width: 22px; height: 22px; border-radius: 50%;
-            box-shadow: inset -3px -3px 5px rgba(0,0,0,.25), inset 2px 2px 3px rgba(255,255,255,.6);
+            position: absolute; width: 2.2em; height: 2.2em; border-radius: 50%;
+            box-shadow: inset -.3em -.3em .5em rgba(0,0,0,.25), inset .2em .2em .3em rgba(255,255,255,.6);
             transition: top .5s, left .5s;
         }
-        .girando .bolita { animation: rebote .25s ease-in-out infinite alternate; }
         .soporte {
             position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
-            width: 200px; height: 52px; border-radius: 14px 14px 8px 8px;
+            width: 20em; height: 5.2em; border-radius: 1.4em 1.4em .8em .8em;
             background: linear-gradient(#2189c6, var(--azul-osc));
-            box-shadow: 0 8px 16px rgba(0,0,0,.2);
+            box-shadow: 0 .8em 1.6em rgba(0,0,0,.2);
         }
         .soporte::before {
-            content: ""; position: absolute; left: 50%; top: -34px; transform: translateX(-50%);
-            width: 26px; height: 40px; background: var(--azul-osc); border-radius: 8px 8px 0 0;
+            content: ""; position: absolute; left: 50%; top: -3.4em; transform: translateX(-50%);
+            width: 2.6em; height: 4em; background: var(--azul-osc); border-radius: .8em .8em 0 0;
         }
         .boca {
-            position: absolute; left: 50%; top: 10px; transform: translateX(-50%);
-            width: 56px; height: 28px; border-radius: 50%; background: #0b3e5c;
-            box-shadow: inset 0 4px 8px rgba(0,0,0,.5);
+            position: absolute; left: 50%; top: 1em; transform: translateX(-50%);
+            width: 5.6em; height: 2.8em; border-radius: 50%; background: #0b3e5c;
+            box-shadow: inset 0 .4em .8em rgba(0,0,0,.5);
         }
         .manivela {
-            position: absolute; right: 4px; top: 92px; width: 34px; height: 34px; border-radius: 50%;
-            background: var(--azul); border: 4px solid #253642; z-index: 4;
+            position: absolute; right: .4em; top: 9.2em; width: 3.4em; height: 3.4em; border-radius: 50%;
+            background: var(--azul); border: .4em solid #253642; z-index: 4;
         }
-        .manivela::after { content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 30px; background: #253642; transform-origin: 50% 0; transform: translate(-50%, 0); border-radius: 3px; }
-        .girando .manivela { animation: girar .35s linear infinite; }
+        .manivela::after { content: ""; position: absolute; left: 50%; top: 50%; width: .6em; height: 3em; background: #253642; transform-origin: 50% 0; transform: translate(-50%, 0); border-radius: .3em; }
+        .girando .alambres, .girando .manivela { animation: girar .35s linear infinite; }
         .girando .globo { animation: temblor .12s linear infinite; }
+        .girando .bolita { animation: rebote .25s ease-in-out infinite alternate; }
 
-        /* ---- Bolilla grande ---- */
+        /* Bolilla grande */
         .bola-grande {
-            --c: #9aa5ae;
-            width: 190px; height: 190px; border-radius: 50%;
+            --c: #9aa5ae; flex: none;
+            width: var(--b); height: var(--b); border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             background: radial-gradient(circle at 32% 28%, #fff 0 6%, var(--c) 34%, color-mix(in srgb, var(--c) 70%, #000) 100%);
-            box-shadow: 0 14px 30px rgba(0,0,0,.25), inset -10px -14px 22px rgba(0,0,0,.25);
+            box-shadow: 0 .9em 2em rgba(0,0,0,.25), inset -10px -14px 22px rgba(0,0,0,.25);
         }
         .bola-grande .cara {
             width: 58%; height: 58%; border-radius: 50%; background: #fff;
             display: flex; align-items: center; justify-content: center;
-            font-size: 64px; font-weight: 900; color: #1d2b36; line-height: 1;
+            font-size: calc(var(--b) * .33); font-weight: 900; color: #1d2b36; line-height: 1;
             box-shadow: inset 0 -4px 8px rgba(0,0,0,.12);
         }
-        .bola-grande.vacia .cara { font-size: 40px; color: #9aa5ae; }
+        .bola-grande.vacia .cara { font-size: calc(var(--b) * .2); color: #9aa5ae; }
         .bola-grande.sale { animation: salir .7s cubic-bezier(.2, 1.4, .4, 1); }
-        .contador { font-size: 20px; font-weight: 700; color: var(--gris); }
-        .contador b { color: var(--azul); font-size: 26px; }
 
-        .controles { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; width: 100%; }
+        .contador { font-size: clamp(15px, 2.2vh, 20px); font-weight: 700; color: var(--gris); text-align: center; }
+        .contador b { color: var(--azul); font-size: 1.3em; }
+
         .btn-girar {
-            width: 100%; font-size: 24px; padding: 16px; border-radius: 14px;
+            width: 100%; font-size: clamp(18px, 2.6vh, 24px); padding: clamp(10px, 1.6vh, 16px); border-radius: 14px;
             background: linear-gradient(var(--verde), var(--verde-osc)); color: #fff;
-            box-shadow: 0 6px 0 #557510, 0 10px 20px rgba(0,0,0,.15);
-            letter-spacing: 1px;
+            box-shadow: 0 5px 0 #557510, 0 10px 20px rgba(0,0,0,.15); letter-spacing: 1px;
         }
         .btn-girar:hover { background: linear-gradient(#9acb22, var(--verde-osc)); }
-        .btn-girar:active { transform: translateY(4px); box-shadow: 0 2px 0 #557510; }
-        .auto-box { display: flex; gap: 6px; align-items: center; }
-        .auto-box select { padding: 7px 8px; }
+        .btn-girar:active { transform: translateY(4px); box-shadow: 0 1px 0 #557510; }
+        .controles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+        .controles .btn, .controles select { width: 100%; padding: 9px 8px; }
         .atajos { font-size: 12px; color: var(--gris); text-align: center; }
         kbd { background: #eef3e2; border-radius: 4px; padding: 1px 5px; font-family: inherit; font-weight: 700; }
 
-        /* ---- Últimas bolillas ---- */
-        .ultimas { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; min-height: 48px; }
+        .ultimas-box { width: 100%; }
+        .ultimas-box h3 { margin: 4px 0 8px; font-size: 14px; color: var(--gris); text-align: center; font-weight: 700; }
+        .ultimas { display: flex; gap: 6px; justify-content: center; flex-wrap: nowrap; overflow: hidden; min-height: 40px; }
         .mini {
-            width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            --t: clamp(30px, 9vw, 44px);
+            width: var(--t); height: var(--t); flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center;
             background: radial-gradient(circle at 32% 28%, #fff 0 5%, var(--c) 40%, color-mix(in srgb, var(--c) 70%, #000));
             box-shadow: 0 3px 8px rgba(0,0,0,.2);
         }
-        .mini span { background: #fff; border-radius: 50%; width: 62%; height: 62%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 15px; }
-        .mini:first-child { width: 52px; height: 52px; }
+        .mini span { background: #fff; border-radius: 50%; width: 62%; height: 62%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: calc(var(--t) * .34); }
 
         /* ---- Tablero 1-90 ---- */
-        .derecha { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
-        .tablero { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
+        .tablero-cab { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .tablero-cab h2 { margin: 0; }
+        .tablero { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: clamp(3px, .6vw, 7px); flex: 1; min-height: 0; }
         .casilla {
-            aspect-ratio: 1.35 / 1; display: flex; align-items: center; justify-content: center;
-            border-radius: 8px; background: #f1f5e8; color: #9aa79a;
-            font-weight: 800; font-size: clamp(14px, 1.9vw, 28px);
+            aspect-ratio: 1.25 / 1; display: flex; align-items: center; justify-content: center;
+            border-radius: clamp(4px, .6vw, 9px); background: #f1f5e8; color: #9aa79a;
+            font-weight: 800; font-size: clamp(13px, 3.6vw, 30px); min-width: 0;
             transition: background .3s, color .3s, transform .3s;
         }
         .casilla.salio { background: var(--c); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
-        .casilla.ultima { transform: scale(1.12); box-shadow: 0 0 0 4px var(--tinta); z-index: 1; animation: latido 1s ease-in-out 3; }
-        .tablero-cab { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
-        .tablero-cab h2 { margin: 0; }
-
+        .casilla.ultima { transform: scale(1.12); box-shadow: 0 0 0 3px var(--tinta); position: relative; z-index: 1; animation: latido 1s ease-in-out 3; }
         .fase {
-            display: inline-flex; align-items: center; gap: 8px; font-weight: 800; padding: 6px 12px;
+            display: inline-flex; align-items: center; gap: 8px; font-weight: 800; padding: 5px 12px; font-size: 14px;
             border-radius: 99px; background: var(--verde-claro); color: var(--verde-osc);
         }
         .fase.bingo { background: #fde8e7; color: #b42318; }
         .fase.fin { background: var(--tinta); color: #fff; }
 
-        .estado { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-        @media (max-width: 700px) { .estado { grid-template-columns: 1fr; } }
         .lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow: auto; }
-        .lista li { display: flex; gap: 8px; align-items: center; padding: 7px 10px; border-radius: 10px; background: #f6f9ef; font-size: 14px; }
+        .lista li { display: flex; gap: 6px 8px; align-items: center; flex-wrap: wrap; padding: 7px 10px; border-radius: 10px; background: #f6f9ef; font-size: 14px; }
         .lista li b { color: var(--azul); }
         .lista .vacio { background: none; color: var(--gris); font-style: italic; }
         .lista .falta { margin-left: auto; font-weight: 800; color: var(--rojo); white-space: nowrap; }
 
+        @media (hover: none) { .atajos { display: none; } }
+
         /* ---- Celebración ---- */
         .celebra .modal-caja { width: min(760px, 100%); text-align: center; }
-        .celebra h3 { font-size: 54px; margin: 0; letter-spacing: 2px; color: var(--rojo); }
-        .celebra .sub { color: var(--gris); margin-bottom: 14px; }
-        .ganadores-cartones { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin: 12px 0 16px; text-align: left; }
+        .celebra h3 { font-size: clamp(34px, 7vw, 56px); margin: 0; letter-spacing: 2px; color: var(--rojo); }
+        .celebra .sub { color: var(--gris); margin-bottom: 12px; }
+        .ganadores-cartones { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 12px; margin: 12px 0 16px; text-align: left; }
         .confeti { position: fixed; top: -20px; width: 10px; height: 16px; z-index: 250; pointer-events: none; animation: caer linear forwards; }
-
         .verif-res { display: grid; gap: 12px; margin-top: 14px; }
+
+        /* =========================================================
+           Tablet vertical / pantallas medianas
+           ========================================================= */
+        @media (min-width: 600px) {
+            .juego { padding: 16px; gap: 16px; }
+            .escena { --m: clamp(6px, 1.3vw, 9px); --b: clamp(130px, 24vw, 200px); }
+            .controles { grid-template-columns: 1.1fr .9fr 1fr 1fr; }
+            .estado { grid-template-columns: 1fr 1fr; }
+            .casilla { font-size: clamp(16px, 2.6vw, 30px); }
+        }
+
+        /* =========================================================
+           Horizontal: zona de juego a pantalla completa, sin scroll
+           (notebook, proyector, TV, tablet acostada)
+           ========================================================= */
+        @media (orientation: landscape) and (min-width: 900px) {
+            body { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+            .topbar { position: static; flex: none; }
+            .juego {
+                flex: 1; min-height: 0; width: 100%;
+                grid-template-columns: minmax(300px, 30vw) minmax(0, 1fr);
+                grid-template-rows: minmax(0, 1fr) auto;
+                grid-template-areas: "sorteo tablero" "sorteo estado";
+                padding: clamp(10px, 1.6vh, 18px); gap: clamp(10px, 1.6vh, 18px);
+            }
+            .sorteo { justify-content: space-evenly; padding: clamp(10px, 1.8vh, 20px); min-height: 0; gap: clamp(6px, 1.2vh, 14px); }
+            .escena { --m: clamp(5px, min(.6vw, .95vh), 11px); --b: clamp(90px, min(11vw, 19vh), 240px); }
+            .controles { grid-template-columns: 1fr 1fr; }
+            .panel-tablero { min-height: 0; padding: clamp(10px, 1.8vh, 18px); }
+            .tablero { grid-template-rows: repeat(9, minmax(0, 1fr)); }
+            .casilla { aspect-ratio: auto; font-size: clamp(13px, min(2.2vw, 4.2vh), 40px); }
+            .estado { grid-template-columns: 1fr 1fr; }
+            .estado .panel { padding: 12px 16px; }
+            .estado .lista { max-height: clamp(60px, 14vh, 200px); }
+            .estado h2 { font-size: 16px; margin-bottom: 8px; }
+            .mini { --t: clamp(30px, min(2.6vw, 5vh), 52px); }
+        }
+        /* Pantallas anchas: tercera columna con "cerca de ganar" y ganadores */
+        @media (orientation: landscape) and (min-width: 1280px) {
+            .juego {
+                grid-template-columns: minmax(320px, 26vw) minmax(0, 1fr) minmax(250px, 19vw);
+                grid-template-rows: minmax(0, 1fr);
+                grid-template-areas: "sorteo tablero estado";
+            }
+            .estado { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; min-height: 0; }
+            .estado .panel { display: flex; flex-direction: column; min-height: 0; }
+            .estado .lista { max-height: none; flex: 1; min-height: 0; }
+            .escena { --m: clamp(5px, min(.5vw, .95vh), 12px); --b: clamp(90px, min(10vw, 22vh), 260px); }
+        }
+        /* Poca altura: se esconden detalles secundarios */
+        @media (orientation: landscape) and (min-width: 900px) and (max-height: 820px) { .atajos { display: none; } }
+        @media (orientation: landscape) and (min-width: 900px) and (max-height: 680px) { .ultimas-box h3 { display: none; } .tablero-cab { margin-bottom: 6px; } }
+
+        /* =========================================================
+           Celular acostado (poca altura)
+           ========================================================= */
+        @media (orientation: landscape) and (max-width: 899px) {
+            .topbar { padding: 5px 10px; }
+            .topbar .btn { padding: 5px 8px; }
+            .juego {
+                grid-template-columns: minmax(230px, 40%) minmax(0, 1fr);
+                grid-template-areas: "sorteo tablero" "estado estado";
+                padding: 8px; gap: 8px;
+            }
+            .sorteo, .panel-tablero { padding: 10px; height: calc(100dvh - 58px); min-height: 250px; }
+            .sorteo { justify-content: space-evenly; gap: 6px; }
+            .escena { --m: clamp(4px, 1.4vh, 7px); --b: clamp(70px, 24vh, 130px); }
+            .contador { font-size: 14px; }
+            .btn-girar { font-size: 16px; padding: 8px; }
+            .controles { grid-template-columns: 1fr 1fr; gap: 5px; }
+            .controles .btn, .controles select { padding: 5px; font-size: 13px; }
+            .atajos, .ultimas-box h3 { display: none; }
+            .mini { --t: clamp(22px, 8vh, 34px); }
+            .tablero { grid-template-rows: repeat(9, minmax(0, 1fr)); gap: 3px; }
+            .tablero-cab { margin-bottom: 6px; }
+            .tablero-cab h2 { font-size: 15px; }
+            .fase { font-size: 12px; padding: 3px 9px; }
+            .casilla { aspect-ratio: auto; font-size: clamp(11px, 4.2vh, 20px); border-radius: 5px; }
+            .estado { grid-template-columns: 1fr 1fr; }
+        }
 
         @keyframes girar { to { transform: rotate(360deg); } }
         @keyframes temblor { 0%,100% { transform: translate(0,0) } 25% { transform: translate(-2px,1px) } 75% { transform: translate(2px,-1px) } }
         @keyframes rebote { to { transform: translate(var(--dx), var(--dy)); } }
-        @keyframes salir { 0% { transform: translateY(-120px) scale(.2); opacity: 0; } 100% { transform: none; opacity: 1; } }
+        @keyframes salir { 0% { transform: translateY(-40%) scale(.2); opacity: 0; } 100% { transform: none; opacity: 1; } }
         @keyframes caer { to { transform: translateY(110vh) rotate(720deg); } }
-
-        :fullscreen .topbar { position: static; }
+        @media (prefers-reduced-motion: reduce) { .girando * , .bola-grande.sale, .confeti { animation: none !important; } }
     </style>
 </head>
 <body>
 
 <header class="topbar">
     <div class="marca">BINGO <span>VIRTUAL</span></div>
-    <button class="btn btn-chico" id="btnVoz" title="Cantar los números en voz alta">🔊 Voz</button>
-    <button class="btn btn-chico" id="btnSonido" title="Efectos de sonido">🎵 Sonido</button>
-    <button class="btn btn-chico" id="btnVerificar">🔎 Verificar cartón</button>
-    <a class="btn btn-chico" href="registrar_cartones.html">🎟️ Cartones</a>
-    <button class="btn btn-chico" id="btnPantalla" title="Pantalla completa (F)">⛶ Pantalla completa</button>
-    <a class="btn btn-chico" href="index.html">🏠 Inicio</a>
+    <button class="btn btn-chico" id="btnVoz" title="Cantar los números en voz alta"><span class="ico">🔊</span><span class="txt">Voz</span></button>
+    <button class="btn btn-chico" id="btnSonido" title="Efectos de sonido"><span class="ico">🎵</span><span class="txt">Sonido</span></button>
+    <button class="btn btn-chico" id="btnVerificar" title="Verificar cartón"><span class="ico">🔎</span><span class="txt">Verificar cartón</span></button>
+    <a class="btn btn-chico" href="registrar_cartones.html" title="Cartones"><span class="ico">🎟️</span><span class="txt">Cartones</span></a>
+    <button class="btn btn-chico" id="btnPantalla" title="Pantalla completa (F)"><span class="ico">⛶</span><span class="txt">Pantalla completa</span></button>
+    <a class="btn btn-chico" href="index.html" title="Inicio"><span class="ico">🏠</span><span class="txt">Inicio</span></a>
 </header>
 
 <main class="juego">
     <section class="panel sorteo">
-        <div class="maquina" id="maquina" aria-hidden="true">
-            <div class="globo"><div class="bolitas" id="bolitas"></div></div>
-            <div class="alambres" style="inset: 0 25px 50px"><i></i><i></i><i></i><i></i></div>
-            <div class="manivela"></div>
-            <div class="soporte"><div class="boca"></div></div>
+        <div class="escena">
+            <div class="maquina" id="maquina" aria-hidden="true">
+                <div class="globo"><div class="bolitas" id="bolitas"></div></div>
+                <div class="alambres"><i></i><i></i><i></i><i></i></div>
+                <div class="manivela"></div>
+                <div class="soporte"><div class="boca"></div></div>
+            </div>
+            <div class="bola-grande vacia" id="bolaGrande" aria-live="polite"><div class="cara" id="bolaNumero">--</div></div>
         </div>
-
-        <div class="bola-grande vacia" id="bolaGrande"><div class="cara" id="bolaNumero">--</div></div>
         <div class="contador">Bolilla <b id="nroBolilla">0</b> de 90 · quedan <b id="quedan">90</b></div>
 
         <button class="btn btn-girar" id="btnGirar">🎰 GIRAR BOLILLERO</button>
         <div class="controles">
-            <div class="auto-box">
-                <button class="btn" id="btnAuto">▶ Automático</button>
-                <select id="selVelocidad" title="Segundos entre bolillas">
-                    <option value="4">cada 4 s</option>
-                    <option value="6" selected>cada 6 s</option>
-                    <option value="8">cada 8 s</option>
-                    <option value="12">cada 12 s</option>
-                </select>
-            </div>
+            <button class="btn" id="btnAuto">▶ Automático</button>
+            <select id="selVelocidad" title="Segundos entre bolillas">
+                <option value="4">cada 4 s</option>
+                <option value="6" selected>cada 6 s</option>
+                <option value="8">cada 8 s</option>
+                <option value="12">cada 12 s</option>
+            </select>
             <button class="btn" id="btnDeshacer" title="Devolver la última bolilla">↩ Deshacer</button>
             <button class="btn btn-rojo" id="btnReiniciar">⟲ Reiniciar</button>
         </div>
         <div class="atajos"><kbd>Espacio</kbd> girar · <kbd>A</kbd> automático · <kbd>F</kbd> pantalla completa</div>
 
-        <div style="width:100%">
-            <h2 style="margin:6px 0 10px;font-size:16px;color:var(--gris);text-align:center">Últimas bolillas</h2>
+        <div class="ultimas-box">
+            <h3>Últimas bolillas</h3>
             <div class="ultimas" id="ultimas"></div>
         </div>
     </section>
 
-    <div class="derecha">
-        <section class="panel">
-            <div class="tablero-cab">
-                <h2>Tablero</h2>
-                <span class="fase" id="fase">Jugando por LÍNEA</span>
-            </div>
-            <div class="tablero" id="tablero"></div>
-        </section>
+    <section class="panel panel-tablero">
+        <div class="tablero-cab">
+            <h2>Tablero</h2>
+            <span class="fase" id="fase">Jugando por LÍNEA</span>
+        </div>
+        <div class="tablero" id="tablero"></div>
+    </section>
 
-        <section class="estado">
-            <div class="panel">
-                <h2>⏳ Cerca de ganar</h2>
-                <ul class="lista" id="listaCerca"></ul>
-            </div>
-            <div class="panel">
-                <h2>🏆 Ganadores</h2>
-                <ul class="lista" id="listaGanadores"></ul>
-            </div>
-        </section>
-    </div>
+    <section class="estado">
+        <div class="panel">
+            <h2>⏳ Cerca de ganar</h2>
+            <ul class="lista" id="listaCerca"></ul>
+        </div>
+        <div class="panel">
+            <h2>🏆 Ganadores</h2>
+            <ul class="lista" id="listaGanadores"></ul>
+        </div>
+    </section>
 </main>
 
 <!-- Celebración -->
