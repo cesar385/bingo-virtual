@@ -133,7 +133,33 @@
         }
         .fase.linea { background: #fff3cd; color: #8a6100; }
         .fase.bingo { background: #fde8e7; color: #b42318; }
+        .fase.sale { background: #6a1b9a; color: #fff; }
         .fase.fin { background: var(--tinta); color: #fff; }
+
+        /* Premios */
+        .premios-cab { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .premios-cab h2 { margin: 0; }
+        .premios { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+        .premio {
+            display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center;
+            padding: 8px 10px; border-radius: 10px; background: #f6f9ef; border: 2px solid transparent;
+        }
+        .premio .badge { grid-row: span 2; justify-self: start; min-width: 92px; text-align: center; padding: 4px 8px; }
+        .premio .monto { font-weight: 900; font-size: clamp(15px, 2vh, 19px); color: var(--tinta); overflow-wrap: anywhere; }
+        .premio .monto.vacio { color: var(--gris); font-weight: 600; font-style: italic; font-size: 14px; }
+        .premio .quien { font-size: 13px; color: var(--gris); overflow-wrap: anywhere; }
+        .premio.actual { border-color: var(--verde); background: #f1f8de; box-shadow: 0 2px 10px rgba(110,149,18,.18); }
+        .premio.actual .quien { color: var(--verde-osc); font-weight: 700; }
+        .premio.ganado .quien { color: var(--azul-osc); font-weight: 700; }
+        .premio.perdido { opacity: .55; }
+        .premio.perdido .monto { text-decoration: line-through; }
+        .badge-saleosale { background: #6a1b9a; color: #fff; }
+        .premio-monto { font-size: clamp(20px, 4vw, 30px); font-weight: 900; color: var(--verde-osc); margin: -4px 0 8px; }
+        .premio-monto:empty { display: none; }
+        .form-premios { display: flex; flex-direction: column; gap: 10px; }
+        .form-premios label { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: 14px; }
+        .form-premios small { font-weight: 400; color: var(--gris); }
+        .form-premios .ayuda { margin: 0; font-size: 13px; color: var(--gris); }
 
         .lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow: auto; }
         .lista li { display: flex; gap: 6px 8px; align-items: center; flex-wrap: wrap; padding: 7px 10px; border-radius: 10px; background: #f6f9ef; font-size: 14px; }
@@ -195,10 +221,20 @@
                 grid-template-rows: minmax(0, 1fr);
                 grid-template-areas: "sorteo tablero estado";
             }
-            .estado { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; min-height: 0; }
+            .estado { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
             .estado .panel { display: flex; flex-direction: column; min-height: 0; }
             .estado .lista { max-height: none; flex: 1; min-height: 0; }
             .escena { --m: clamp(5px, min(.5vw, .95vh), 12px); --b: clamp(90px, min(10vw, 22vh), 260px); }
+        }
+        /* Dos columnas (tablet acostada / notebook chica): premios compactos en 2x2 */
+        @media (orientation: landscape) and (min-width: 900px) and (max-width: 1279px) {
+            .estado { grid-template-columns: 2fr 1fr; }
+            .premios { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+            .premio { padding: 5px 8px; gap: 0 8px; }
+            .premio .badge { min-width: 0; font-size: 11px; }
+            .premio .monto { font-size: 15px; }
+            .premio .quien { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .premios-cab { margin-bottom: 6px; }
         }
         /* Poca altura: se esconden detalles secundarios */
         @media (orientation: landscape) and (min-width: 900px) and (max-height: 820px) { .atajos { display: none; } }
@@ -294,13 +330,16 @@
     </section>
 
     <section class="estado">
+        <div class="panel panel-premios">
+            <div class="premios-cab">
+                <h2>🎁 Premios</h2>
+                <button class="btn btn-chico" id="btnPremios" title="Cargar los premios">⚙️ Editar</button>
+            </div>
+            <ul class="premios" id="listaPremios"></ul>
+        </div>
         <div class="panel">
             <h2>⏳ Cerca de ganar</h2>
             <ul class="lista" id="listaCerca"></ul>
-        </div>
-        <div class="panel">
-            <h2>🏆 Ganadores</h2>
-            <ul class="lista" id="listaGanadores"></ul>
         </div>
     </section>
 </main>
@@ -310,8 +349,28 @@
     <div class="modal-caja">
         <h3 id="ganTitulo">¡CUATERNO!</h3>
         <div class="sub" id="ganSub"></div>
+        <div class="premio-monto" id="ganPremio"></div>
         <div class="ganadores-cartones" id="ganCartones"></div>
         <button class="btn btn-verde" id="btnCerrarGanador" style="font-size:18px;padding:12px 26px">Continuar</button>
+    </div>
+</div>
+
+<!-- Configurar premios -->
+<div class="modal" id="modalPremios">
+    <div class="modal-caja" style="width:min(480px,100%)">
+        <h3>🎁 Premios de la partida</h3>
+        <form id="formPremios" class="form-premios" autocomplete="off">
+            <label>Cuaterno <small>(4 números de una fila)</small><input type="text" id="prCuaterno" placeholder="Ej: $ 20.000"></label>
+            <label>Línea <small>(fila completa)</small><input type="text" id="prLinea" placeholder="Ej: $ 50.000"></label>
+            <label>Bingo <small>(cartón lleno — pozo)</small><input type="text" id="prBingo" placeholder="Ej: $ 500.000 o una moto"></label>
+            <label>El pozo del bingo vale hasta la bolilla N°<input type="number" id="prLimite" min="15" max="89" placeholder="Sin límite (no hay sale o sale)"></label>
+            <label>Sale o sale <small>(si no salió el bingo a tiempo)</small><input type="text" id="prSale" placeholder="Ej: $ 100.000"></label>
+            <p class="ayuda">Si nadie canta bingo hasta esa bolilla, se juega <b>SALE O SALE</b>: se sigue sacando hasta que alguien llene el cartón y se lleva ese premio.</p>
+            <div style="display:flex;gap:8px;justify-content:flex-end">
+                <button type="button" class="btn" id="btnCancelarPremios">Cancelar</button>
+                <button type="submit" class="btn btn-verde">Guardar premios</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -346,6 +405,10 @@
     const $ = id => document.getElementById(id);
     let estado = Bingo.cargarEstado();
     let girando = false;
+    let pendienteSale = false;
+    const premios = Object.assign({ cuaterno: '', linea: '', bingo: '', limite: '', saleosale: '' },
+        JSON.parse(localStorage.getItem('bingoPremios') || '{}'));
+    function limite() { const l = parseInt(premios.limite); return l > 0 ? l : 0; }
     let autoTimer = null;
     const prefs = Object.assign({ voz: true, sonido: true, velocidad: 6 }, JSON.parse(localStorage.getItem('bingoPrefs') || '{}'));
 
@@ -444,7 +507,8 @@
         fase.className = 'fase';
         if (estado.numbers.length === 0) { fase.textContent = 'Bolillero vacío'; fase.classList.add('fin'); }
         else if (estado.bingoGanado) { fase.textContent = '🏆 BINGO cantado'; fase.classList.add('fin'); }
-        else if (estado.lineaGanada) { fase.textContent = 'Jugando por BINGO'; fase.classList.add('bingo'); }
+        else if (estado.lineaGanada && premioEnJuego(total + 1) === 'saleosale') { fase.textContent = '🔥 SALE O SALE'; fase.classList.add('sale'); }
+        else if (estado.lineaGanada) { fase.textContent = 'Jugando por BINGO' + (limite() ? ` · hasta bolilla ${limite()}` : ''); fase.classList.add('bingo'); }
         else if (estado.cuaternoGanado) { fase.textContent = 'Jugando por LÍNEA'; fase.classList.add('linea'); }
         else fase.textContent = 'Jugando por CUATERNO';
 
@@ -452,14 +516,14 @@
         const cartones = Bingo.cargarCartones();
         const sacadas = new Set(estado.drawnNumbers);
         const cerca = [];
-        const premio = premioEnJuego();
+        const premio = premioEnJuego(total + 1);
         if (premio && total) {
             cartones.forEach(c => {
                 const p = Bingo.progreso(c, sacadas);
                 // Sólo se indica CUÁNTOS números faltan, nunca cuáles
                 if (premio === 'cuaterno' && p.maxFila === 3) cerca.push({ c, falta: 1 });
                 else if (premio === 'linea' && p.maxFila === 4) cerca.push({ c, falta: 1 });
-                else if (premio === 'bingo' && p.faltan.length <= 2) cerca.push({ c, falta: p.faltan.length });
+                else if ((premio === 'bingo' || premio === 'saleosale') && p.faltan.length <= 2) cerca.push({ c, falta: p.faltan.length });
             });
         }
         cerca.sort((a, b) => a.falta - b.falta || (+a.c.numero) - (+b.c.numero));
@@ -469,11 +533,7 @@
                 ? cerca.map(x => `<li><b>N° ${Bingo.escapar(x.c.numero)}</b> ${Bingo.escapar(x.c.comprador)}<span class="falta">${x.falta === 1 ? 'le falta 1' : 'le faltan ' + x.falta}</span></li>`).join('')
                 : (premio ? `<li class="vacio">Nadie está cerca del ${NOMBRE[premio]} todavía.</li>` : '<li class="vacio">Juego terminado.</li>');
 
-        $('listaGanadores').innerHTML = estado.ganadores.length
-            ? estado.ganadores.map(g => `<li><span class="badge badge-${g.tipo}">${NOMBRE[g.tipo]}</span>
-                <b>N° ${Bingo.escapar(g.numero)}</b> ${Bingo.escapar(g.comprador)}
-                <span class="falta" style="color:var(--gris)">bolilla ${g.bola} (${g.numeroBola})</span></li>`).join('')
-            : '<li class="vacio">Sin ganadores aún.</li>';
+        dibujarPremios();
     }
 
     function dibujarTodo(animar) {
@@ -483,15 +543,47 @@
     }
 
     /* ---------- Juego ---------- */
-    const NOMBRE = { cuaterno: 'CUATERNO', linea: 'LÍNEA', bingo: 'BINGO' };
-    const FLAG = { cuaterno: 'cuaternoGanado', linea: 'lineaGanada', bingo: 'bingoGanado' };
+    const NOMBRE = { cuaterno: 'CUATERNO', linea: 'LÍNEA', bingo: 'BINGO', saleosale: 'SALE O SALE' };
+    const FLAG = { cuaterno: 'cuaternoGanado', linea: 'lineaGanada', bingo: 'bingoGanado', saleosale: 'bingoGanado' };
 
-    // Premios en orden: CUATERNO (4 de una fila) → LÍNEA (fila completa) → BINGO (cartón lleno)
-    function premioEnJuego() {
+    // Premios en orden: CUATERNO (4 de una fila) → LÍNEA (fila completa) → BINGO (cartón lleno).
+    // Si hay límite y el bingo no sale hasta esa bolilla, el cartón lleno pasa a ser SALE O SALE.
+    // "bola" = número de orden de la bolilla que se evalúa.
+    function premioEnJuego(bola) {
+        if (bola == null) bola = estado.drawnNumbers.length;
         if (!estado.cuaternoGanado) return 'cuaterno';
         if (!estado.lineaGanada) return 'linea';
-        if (!estado.bingoGanado) return 'bingo';
+        if (!estado.bingoGanado) return limite() && bola > limite() ? 'saleosale' : 'bingo';
         return null;
+    }
+
+    function dibujarPremios() {
+        const total = estado.drawnNumbers.length;
+        const actual = premioEnJuego(total + 1);
+        const pasoLimite = limite() && total >= limite();
+        const filas = ['cuaterno', 'linea', 'bingo'];
+        if (limite()) filas.push('saleosale');
+        $('listaPremios').innerHTML = filas.map(t => {
+            const gan = estado.ganadores.filter(g => g.tipo === t);
+            let cls = '', quien;
+            if (gan.length) {
+                cls = 'ganado';
+                quien = 'Ganó ' + gan.map(g => `N° ${Bingo.escapar(g.numero)} ${Bingo.escapar(g.comprador)}`).join(', ') + ` (bolilla ${gan[0].bola})`;
+            } else if (t === 'bingo' && (estado.bingoGanado || pasoLimite)) {
+                cls = 'perdido'; quien = `No salió hasta la bolilla ${limite()}`;
+            } else if (t === 'saleosale' && estado.bingoGanado) {
+                cls = 'perdido'; quien = 'No hizo falta';
+            } else if (t === actual && !estado.bingoGanado) {
+                cls = 'actual';
+                quien = '▶ Se está jugando';
+                if (t === 'bingo' && limite()) quien += ` · quedan ${limite() - total} bolillas`;
+                if (t === 'saleosale') quien = '▶ Se juega hasta que alguien llene el cartón';
+            } else {
+                quien = t === 'bingo' && limite() ? `Hasta la bolilla ${limite()}` : t === 'saleosale' ? `Si no sale el bingo hasta la bolilla ${limite()}` : 'Pendiente';
+            }
+            const monto = premios[t] ? `<span class="monto">${Bingo.escapar(premios[t])}</span>` : '<span class="monto vacio">Premio a definir</span>';
+            return `<li class="premio ${cls}"><span class="badge badge-${t}">${NOMBRE[t]}</span>${monto}<span class="quien">${quien}</span></li>`;
+        }).join('');
     }
 
     function evaluarGanadores(n) {
@@ -504,7 +596,7 @@
             const base = { tipo: premio, cartonId: c.id, numero: c.numero, comprador: c.comprador, bola: estado.drawnNumbers.length, numeroBola: n };
             if (premio === 'cuaterno' && p.cuaterno) nuevos.push(Object.assign(base, { fila: p.filas.findIndex(f => f.marcados >= 4) + 1 }));
             else if (premio === 'linea' && p.linea) nuevos.push(Object.assign(base, { fila: p.filas.findIndex(f => f.completa) + 1 }));
-            else if (premio === 'bingo' && p.bingo) nuevos.push(base);
+            else if ((premio === 'bingo' || premio === 'saleosale') && p.bingo) nuevos.push(base);
         });
         if (nuevos.length) estado[FLAG[premio]] = true;
         estado.ganadores.push(...nuevos);
@@ -525,12 +617,15 @@
             const n = estado.numbers.splice(i, 1)[0];
             estado.drawnNumbers.push(n);
             const nuevos = evaluarGanadores(n);
+            // Se terminó el plazo del pozo sin bingo: avisar que empieza el SALE O SALE
+            if (limite() && estado.drawnNumbers.length === limite() && !estado.bingoGanado && estado.numbers.length) pendienteSale = true;
             Bingo.guardarEstado(estado);
             girando = false;
             dibujarTodo(true);
             sonidoBola();
             cantar(n);
             if (nuevos.length) setTimeout(() => celebrar(nuevos), 900);
+            else if (pendienteSale) setTimeout(anunciarSale, 900);
             else if (autoTimer) programarAuto();
             if (estado.numbers.length === 0) pararAuto();
         }, dur);
@@ -542,7 +637,9 @@
         estado.numbers.push(n);
         const total = estado.drawnNumbers.length;
         estado.ganadores = estado.ganadores.filter(g => g.bola <= total);
-        Object.keys(FLAG).forEach(t => { estado[FLAG[t]] = estado.ganadores.some(g => g.tipo === t); });
+        estado.cuaternoGanado = estado.ganadores.some(g => g.tipo === 'cuaterno');
+        estado.lineaGanada = estado.ganadores.some(g => g.tipo === 'linea');
+        estado.bingoGanado = estado.ganadores.some(g => g.tipo === 'bingo' || g.tipo === 'saleosale');
         Bingo.guardarEstado(estado);
         dibujarTodo(false);
         toast(`Se devolvió la bolilla ${n} al bolillero`);
@@ -578,10 +675,11 @@
     /* ---------- Celebración ---------- */
     function celebrar(nuevos) {
         const tipo = nuevos[0].tipo;
-        const esBingo = tipo === 'bingo';
+        const esBingo = tipo === 'bingo' || tipo === 'saleosale';
         const lista = nuevos;
         if (esBingo) pararAuto();
-        $('ganTitulo').textContent = esBingo ? '¡¡BINGO!!' : `¡${NOMBRE[tipo]}!`;
+        $('ganTitulo').textContent = tipo === 'bingo' ? '¡¡BINGO!!' : tipo === 'saleosale' ? '¡¡BINGO!! · Sale o sale' : `¡${NOMBRE[tipo]}!`;
+        $('ganPremio').textContent = premios[tipo] ? '🎁 ' + premios[tipo] + (lista.length > 1 ? ' (a repartir)' : '') : '';
         $('ganSub').textContent = `Con la bolilla ${lista[0].numeroBola} (bolilla N° ${lista[0].bola})` + (lista.length > 1 ? ` · ${lista.length} ganadores` : '');
         const cartones = Bingo.cargarCartones();
         $('ganCartones').innerHTML = lista.map(g => {
@@ -591,11 +689,23 @@
         $('modalGanador').classList.add('abierto');
         sonidoPremio();
         const nombres = lista.map(g => `cartón ${g.numero}, ${g.comprador || ''}`).join('; ');
-        setTimeout(() => decir(`¡${{ cuaterno: 'Cuaterno', linea: 'Línea', bingo: 'Bingo' }[tipo]}! ${nombres}`), 700);
+        setTimeout(() => decir(`¡${{ cuaterno: 'Cuaterno', linea: 'Línea', bingo: 'Bingo', saleosale: 'Bingo' }[tipo]}! ${nombres}`), 700);
         confeti();
+    }
+    function anunciarSale() {
+        pendienteSale = false;
+        $('ganTitulo').textContent = '🔥 ¡SALE O SALE!';
+        $('ganSub').textContent = `Nadie cantó bingo hasta la bolilla ${limite()}. Ahora se sigue hasta que alguien llene el cartón.`;
+        $('ganPremio').textContent = premios.saleosale ? '🎁 ' + premios.saleosale : '';
+        $('ganCartones').innerHTML = '';
+        $('modalGanador').classList.add('abierto');
+        sonidoPremio();
+        setTimeout(() => decir(`No salió el bingo. ¡Ahora se juega sale o sale!`), 500);
     }
     function cerrarGanador() {
         $('modalGanador').classList.remove('abierto');
+        if (pendienteSale && !estado.bingoGanado) { setTimeout(anunciarSale, 300); return; }
+        pendienteSale = false;
         if (autoTimer && !estado.bingoGanado) programarAuto();
         else if (estado.bingoGanado) pararAuto();
     }
@@ -650,6 +760,21 @@
     $('btnVoz').onclick = () => { prefs.voz = !prefs.voz; guardarPrefs(); dibujarTodo(false); if (prefs.voz) decir('Voz activada'); else speechSynthesis && speechSynthesis.cancel(); };
     $('btnSonido').onclick = () => { prefs.sonido = !prefs.sonido; guardarPrefs(); dibujarTodo(false); };
     $('btnCerrarGanador').onclick = cerrarGanador;
+    const camposPremio = { prCuaterno: 'cuaterno', prLinea: 'linea', prBingo: 'bingo', prLimite: 'limite', prSale: 'saleosale' };
+    $('btnPremios').onclick = () => {
+        Object.entries(camposPremio).forEach(([id, k]) => $(id).value = premios[k] || '');
+        $('modalPremios').classList.add('abierto');
+        $('prCuaterno').focus();
+    };
+    $('btnCancelarPremios').onclick = () => $('modalPremios').classList.remove('abierto');
+    $('formPremios').onsubmit = e => {
+        e.preventDefault();
+        Object.entries(camposPremio).forEach(([id, k]) => premios[k] = $(id).value.trim());
+        localStorage.setItem('bingoPremios', JSON.stringify(premios));
+        $('modalPremios').classList.remove('abierto');
+        dibujarEstado();
+        toast('Premios guardados');
+    };
     $('btnVerificar').onclick = abrirVerificar;
     $('btnCerrarVerif').onclick = () => $('modalVerificar').classList.remove('abierto');
     $('verifInput').oninput = verificar;
@@ -678,6 +803,7 @@
     window.addEventListener('storage', e => {
         if (e.key === 'cartones') dibujarEstado();
         if (e.key === 'bingoState') { estado = Bingo.cargarEstado(); dibujarTodo(false); }
+        if (e.key === 'bingoPremios') { Object.assign(premios, JSON.parse(e.newValue || '{}')); dibujarEstado(); }
     });
     if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = () => { };
 
