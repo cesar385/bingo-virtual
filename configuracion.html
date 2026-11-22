@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Bingo Virtual - Configuración</title>
+    <link rel="stylesheet" href="bingo.css">
+    <style>
+        .pagina { max-width: 1100px; margin: 0 auto; padding: 18px; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+        @media (max-width: 860px) { .pagina { grid-template-columns: 1fr; padding: 10px; gap: 12px; } }
+        .col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+        @media (max-width: 860px) { .col { gap: 12px; } }
+        .intro { grid-column: 1 / -1; margin: 0; color: var(--gris); font-size: 14px; }
+        .intro b { color: var(--tinta); }
+
+        .form { display: flex; flex-direction: column; gap: 12px; }
+        .form label { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: 14px; }
+        .form small { font-weight: 400; color: var(--gris); }
+        .form input { width: 100%; }
+        .fs-pozo { border: 2px solid var(--oro); border-radius: 12px; padding: 8px 12px 12px; margin: 0; display: flex; flex-direction: column; gap: 12px; background: #fffbea; min-width: 0; }
+        .fs-pozo legend { font-weight: 900; color: #8a6100; padding: 0 6px; }
+        .ayuda { margin: 0; font-size: 13px; color: var(--gris); }
+
+        .chances { font-size: 13px; background: #fff; border-radius: 10px; padding: 10px 12px; border: 1px solid var(--borde); }
+        .chances:empty { display: none; }
+        .chances .barras { display: grid; grid-template-columns: auto 1fr auto; gap: 5px 8px; align-items: center; margin: 8px 0 4px; }
+        .chances .bar { height: 8px; border-radius: 99px; background: #eef3e2; overflow: hidden; }
+        .chances .bar i { display: block; height: 100%; border-radius: 99px; }
+        .chances .pct { font-weight: 800; text-align: right; min-width: 42px; }
+        .chances .aviso { margin-top: 8px; padding: 7px 9px; border-radius: 8px; background: #fff3cd; color: #8a6100; font-weight: 600; }
+        .chances .ok { margin-top: 8px; padding: 7px 9px; border-radius: 8px; background: #edf7d9; color: var(--verde-osc); font-weight: 600; }
+        .chances .nota { color: var(--gris); font-size: 12px; margin-top: 6px; }
+
+        .opcion { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #eef3e2; }
+        .opcion:last-child { border-bottom: 0; }
+        .opcion .txt b { display: block; }
+        .opcion .txt span { font-size: 13px; color: var(--gris); }
+        .interruptor { position: relative; width: 52px; height: 30px; flex: none; }
+        .interruptor input { opacity: 0; width: 0; height: 0; position: absolute; }
+        .interruptor i { position: absolute; inset: 0; background: #cfd8c4; border-radius: 99px; cursor: pointer; transition: background .2s; }
+        .interruptor i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s; }
+        .interruptor input:checked + i { background: var(--verde); }
+        .interruptor input:checked + i::after { transform: translateX(22px); }
+        .interruptor input:focus-visible + i { outline: 3px solid var(--azul); outline-offset: 2px; }
+
+        .opcion select { flex: none; min-width: 120px; }
+        .guardado { font-size: 13px; color: var(--verde-osc); font-weight: 700; opacity: 0; transition: opacity .3s; }
+        .guardado.ver { opacity: 1; }
+        .panel h2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="marca">BINGO <span>VIRTUAL</span></div>
+    <a class="btn btn-azul" href="bolillero.html" title="Ir al bolillero"><span class="ico">🎰</span><span class="txt">Bolillero</span></a>
+    <a class="btn" href="registrar_cartones.html" title="Cartones"><span class="ico">🎟️</span><span class="txt">Cartones</span></a>
+    <a class="btn" href="index.html" title="Inicio"><span class="ico">🏠</span><span class="txt">Inicio</span></a>
+</header>
+
+<main class="pagina">
+    <p class="intro">⚙️ <b>Configuración del bolillero.</b> Los cambios se guardan solos y se aplican al instante en el bolillero, aunque esté abierto en otra pestaña o proyectándose.</p>
+
+    <div class="col">
+        <section class="panel">
+            <h2>🎁 Premios de la partida <span class="guardado" id="guardadoPremios">✔ Guardado</span></h2>
+            <form class="form" id="formPremios" autocomplete="off" onsubmit="return false">
+                <fieldset class="fs-pozo">
+                    <legend>💰 Bingo con pozo</legend>
+                    <label>El pozo vale hasta la bolilla N°<input type="number" id="prLimite" min="15" max="89" inputmode="numeric" placeholder="Sin límite (no hay sale o sale)"></label>
+                    <div class="chances" id="chances" aria-live="polite"></div>
+                    <label>Cuaterno <small>(4 números de una fila)</small><input type="text" id="prCuaterno" placeholder="Ej: $ 20.000"></label>
+                    <label>Línea <small>(fila completa)</small><input type="text" id="prLinea" placeholder="Ej: $ 50.000"></label>
+                    <label>Bingo <small>(cartón lleno — pozo)</small><input type="text" id="prBingo" placeholder="Ej: $ 500.000 o una moto"></label>
+                </fieldset>
+                <label>Sale o sale <small>(si no salió el bingo a tiempo)</small><input type="text" id="prSale" placeholder="Ej: $ 100.000"></label>
+                <p class="ayuda">Si nadie canta bingo hasta la bolilla límite, se juega <b>SALE O SALE</b>: se sigue sacando hasta que alguien llene el cartón y se lleva ese premio.</p>
+                <p class="ayuda">Si en una misma bolilla completan el premio varios cartones, <b>ganan todos</b> y el premio se reparte.</p>
+            </form>
+        </section>
+    </div>
+
+    <div class="col">
+        <section class="panel">
+            <h2>🔊 Sonido y voz <span class="guardado" id="guardadoSonido">✔ Guardado</span></h2>
+            <div class="opcion">
+                <div class="txt"><b>Cantar los números</b><span>Una voz dice cada bolilla y anuncia a los ganadores.</span></div>
+                <label class="interruptor"><input type="checkbox" id="optVoz"><i></i></label>
+            </div>
+            <div class="opcion">
+                <div class="txt"><b>Efectos de sonido</b><span>Ruido del bolillero, campana y festejo.</span></div>
+                <label class="interruptor"><input type="checkbox" id="optSonido"><i></i></label>
+            </div>
+            <div class="opcion">
+                <div class="txt"><b>Probar</b><span>Escuchá cómo suena en este equipo.</span></div>
+                <button class="btn btn-chico" id="btnProbar" type="button">▶ Probar voz</button>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>⏱️ Sorteo automático <span class="guardado" id="guardadoAuto">✔ Guardado</span></h2>
+            <div class="opcion">
+                <div class="txt"><b>Tiempo entre bolillas</b><span>Cuando el bolillero está en modo «Automático».</span></div>
+                <select id="optVelocidad">
+                    <option value="4">cada 4 s</option>
+                    <option value="6">cada 6 s</option>
+                    <option value="8">cada 8 s</option>
+                    <option value="10">cada 10 s</option>
+                    <option value="12">cada 12 s</option>
+                    <option value="15">cada 15 s</option>
+                </select>
+            </div>
+        </section>
+    </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="bingo-core.js"></script>
+<script>
+    const $ = id => document.getElementById(id);
+    const leer = (k, def) => { try { return Object.assign(def, JSON.parse(localStorage.getItem(k) || '{}')); } catch (e) { return def; } };
+    const premios = leer('bingoPremios', { cuaterno: '', linea: '', bingo: '', limite: '', saleosale: '' });
+    const prefs = leer('bingoPrefs', { voz: true, sonido: true, velocidad: 6 });
+
+    function avisarGuardado(id) {
+        const el = $(id); el.classList.add('ver');
+        clearTimeout(el._h); el._h = setTimeout(() => el.classList.remove('ver'), 1500);
+    }
+
+    /* ---------- Premios ---------- */
+    const campos = { prCuaterno: 'cuaterno', prLinea: 'linea', prBingo: 'bingo', prLimite: 'limite', prSale: 'saleosale' };
+    function cargarPremios() { Object.entries(campos).forEach(([id, k]) => { if (document.activeElement !== $(id)) $(id).value = premios[k] || ''; }); }
+    let tGuardar = null;
+    Object.keys(campos).forEach(id => $(id).addEventListener('input', () => {
+        clearTimeout(tGuardar);
+        tGuardar = setTimeout(() => {
+            Object.entries(campos).forEach(([i, k]) => premios[k] = $(i).value.trim());
+            localStorage.setItem('bingoPremios', JSON.stringify(premios));
+            avisarGuardado('guardadoPremios');
+            calcularChances();
+        }, 300);
+    }));
+
+    // Chance de que salgan los premios antes del límite (simulación; el sorteo real no se toca)
+    let simCache = null;
+    function cartonesEnJuego() {
+        return Bingo.cargarCartones().filter(c => (c.comprador || '').trim().toLowerCase() !== 'sin vender');
+    }
+    function calcularChances() {
+        const caja = $('chances');
+        const lim = parseInt($('prLimite').value);
+        if (!(lim > 0)) { caja.innerHTML = ''; return; }
+        const enJuego = cartonesEnJuego();
+        const total = Bingo.cargarCartones().length;
+        if (!enJuego.length) {
+            caja.innerHTML = '<div class="aviso">Cargá los cartones vendidos para calcular la chance de que salgan los premios antes del límite.</div>';
+            return;
+        }
+        const clave = enJuego.map(c => c.id + c.numeros.join('.')).join(',');
+        if (!simCache || simCache.clave !== clave) {
+            const sims = Math.max(800, Math.min(3000, Math.round(60000 / enJuego.length)));
+            simCache = { clave, sims, res: Bingo.simular(enJuego, sims) };
+        }
+        const r = simCache.res;
+        const pc = k => Math.round(Bingo.probHasta(r[k], lim) * 100);
+        const fila = (nombre, k, color) => { const v = pc(k); return `<span>${nombre}</span><span class="bar"><i style="width:${v}%;background:${color}"></i></span><span class="pct">${v}%</span>`; };
+        const pCu = pc('cuaterno'), pLi = pc('linea');
+        const sugerido = Math.min(89, Bingo.percentil(r.linea, .9));
+        let msj;
+        if (pCu < 90 || pLi < 90) {
+            msj = `<div class="aviso">⚠ Con este límite ${pLi < 90 ? 'la línea' : 'el cuaterno'} puede no salir a tiempo (sale ${Math.min(pCu, pLi)} de cada 100 partidas).`
+                + (sugerido > lim ? ` Para que la línea salga 9 de cada 10 veces, poné el límite en la bolilla <b>${sugerido}</b> o más.` : '') + '</div>';
+        } else {
+            msj = '<div class="ok">✔ Con este límite, cuaterno y línea salen casi siempre antes del final del pozo.</div>';
+        }
+        caja.innerHTML = `<b>Chance de que salga hasta la bolilla ${lim}</b> <span style="color:var(--gris)">(${enJuego.length} cartones en juego)</span>
+            <div class="barras">${fila('Cuaterno', 'cuaterno', '#26a69a')}${fila('Línea', 'linea', '#f9b800')}${fila('Bingo (pozo)', 'bingo', '#e53935')}</div>
+            ${msj}
+            <div class="nota">Es un cálculo con ${simCache.sims.toLocaleString('es-AR')} partidas simuladas al azar. El sorteo real no se modifica.${total > enJuego.length ? ` No se cuentan ${total - enJuego.length} cartones "Sin vender".` : ''}</div>`;
+    }
+
+    /* ---------- Sonido, voz y automático ---------- */
+    function cargarPrefs() {
+        $('optVoz').checked = !!prefs.voz;
+        $('optSonido').checked = !!prefs.sonido;
+        $('optVelocidad').value = String(prefs.velocidad);
+        if (!$('optVelocidad').value) $('optVelocidad').value = '6';
+    }
+    function guardarPrefs(aviso) { localStorage.setItem('bingoPrefs', JSON.stringify(prefs)); avisarGuardado(aviso); }
+    $('optVoz').onchange = e => { prefs.voz = e.target.checked; guardarPrefs('guardadoSonido'); };
+    $('optSonido').onchange = e => { prefs.sonido = e.target.checked; guardarPrefs('guardadoSonido'); };
+    $('optVelocidad').onchange = e => { prefs.velocidad = +e.target.value; guardarPrefs('guardadoAuto'); };
+    $('btnProbar').onclick = () => {
+        if (!('speechSynthesis' in window)) { alertaToast('Este navegador no tiene voz.'); return; }
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance('Bolilla 23. dos, tres');
+        u.lang = 'es-AR'; u.rate = .9;
+        const v = speechSynthesis.getVoices().find(v => v.lang === 'es-AR') || speechSynthesis.getVoices().find(v => v.lang && v.lang.startsWith('es'));
+        if (v) u.voice = v;
+        speechSynthesis.speak(u);
+    };
+    function alertaToast(msg) {
+        const t = $('toast'); t.textContent = msg; t.classList.add('ver');
+        clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('ver'), 2200);
+    }
+
+    // Si se cambia algo desde otra pestaña, reflejarlo
+    window.addEventListener('storage', e => {
+        if (e.key === 'bingoPremios') { Object.assign(premios, JSON.parse(e.newValue || '{}')); cargarPremios(); calcularChances(); }
+        if (e.key === 'bingoPrefs') { Object.assign(prefs, JSON.parse(e.newValue || '{}')); cargarPrefs(); }
+        if (e.key === 'cartones') calcularChances();
+    });
+
+    cargarPremios();
+    cargarPrefs();
+    calcularChances();
+</script>
+</body>
+</html>
