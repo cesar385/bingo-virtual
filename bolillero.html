@@ -353,9 +353,29 @@
         body.vivo .vivo-envivo i { width: 14px; height: 14px; border-radius: 50%; background: #fff; animation: titila 1.2s ease-in-out infinite; }
         body.vivo .tablero-cab { display: none; }
         body.vivo .sorteo { justify-content: space-evenly; gap: 18px; min-height: 0; }
-        body.vivo .contador { font-size: 30px; }
-        body.vivo .ultimas-box h3 { font-size: 24px; display: block; }
-        body.vivo .mini { --t: 62px; }
+        body.vivo .contador { font-size: 28px; white-space: nowrap; }
+        /* Últimas bolillas (panel propio en la transmisión) */
+        body.vivo .ultimas-box {
+            grid-area: ultimas; display: flex; align-items: center; gap: 22px; padding: 14px 24px; min-height: 0;
+            background: linear-gradient(90deg, #ffffff, #f4f9e8);
+        }
+        body.vivo .ultimas-box h3 {
+            display: block; margin: 0; flex: none; width: 112px; text-align: left;
+            font-size: 24px; line-height: 1.15; font-weight: 900; color: var(--azul); text-transform: uppercase;
+        }
+        body.vivo .ultimas { flex: 1; justify-content: flex-start; align-items: center; gap: 14px; overflow: visible; min-height: 0; }
+        body.vivo .previa { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        body.vivo .previa small { font-size: 16px; font-weight: 800; color: var(--gris); letter-spacing: .5px; }
+        body.vivo .mini { --t: 82px; box-shadow: 0 5px 12px rgba(0,0,0,.25); }
+        body.vivo .previa.anterior .mini { --t: 100px; outline: 5px solid var(--oro); outline-offset: 3px; }
+        body.vivo .previa.anterior small { color: #8a6100; }
+        body.vivo .previa:nth-child(n+5) { opacity: .85; }
+        body.vivo .previa:nth-child(n+7) { opacity: .65; }
+        body.vivo .sin-previas { font-size: 22px; color: var(--gris); font-style: italic; }
+        body.vivo .ultimas.entra .previa { animation: correr .5s ease-out both; }
+        body.vivo .ultimas.entra .previa.anterior { animation: entrar .7s cubic-bezier(.2, 1.4, .4, 1) both; }
+        @keyframes correr { from { transform: translateX(-60px); opacity: .3; } }
+        @keyframes entrar { from { transform: translate(-120px, -40px) scale(.3); opacity: 0; } }
         body.vivo .tablero { grid-template-rows: repeat(9, minmax(0, 1fr)); gap: 10px; }
         body.vivo .casilla { aspect-ratio: auto; border-radius: 12px; font-size: 50px; }
         body.vivo .casilla.ultima { box-shadow: 0 0 0 6px var(--tinta); }
@@ -380,28 +400,36 @@
         body.vivo.horizontal .juego {
             width: 1920px; height: 1080px;
             grid-template-columns: 470px minmax(0, 1fr) 470px;
-            grid-template-rows: 100px minmax(0, 1fr);
-            grid-template-areas: "cab cab cab" "sorteo tablero estado";
+            grid-template-rows: 100px minmax(0, 1fr) 170px;
+            grid-template-areas: "cab cab cab" "sorteo tablero estado" "sorteo ultimas estado";
         }
-        body.vivo.horizontal .escena { flex-direction: column; gap: 18px; --m: 10px; --b: 330px; }
+        body.vivo.horizontal .escena { flex-direction: column; gap: 26px; --m: 11px; --b: 360px; }
+        body.vivo.horizontal .tablero { gap: 8px; }
+        body.vivo.horizontal .casilla { font-size: 44px; }
 
         /* Vertical 9:16 — 1080 x 1920 */
         body.vivo.vertical .juego {
             width: 1080px; height: 1920px;
             grid-template-columns: minmax(0, 1fr);
-            grid-template-rows: 120px 440px minmax(0, 1fr) 560px;
-            grid-template-areas: "cab" "sorteo" "tablero" "estado";
+            grid-template-rows: 120px 400px 170px minmax(0, 1fr) 520px;
+            grid-template-areas: "cab" "sorteo" "ultimas" "tablero" "estado";
         }
         body.vivo.vertical .vivo-cab { gap: 16px; padding: 0 22px; }
         body.vivo.vertical .vivo-marca { font-size: 40px; }
-        body.vivo.vertical .vivo-dato { display: none; }
+        body.vivo.vertical .vivo-dato { font-size: 24px; }
+        body.vivo.vertical .vivo-dato b { font-size: 38px; }
+        body.vivo.vertical .vivo-dato small { font-size: 20px; }
         body.vivo.vertical .vivo-fase { font-size: 22px; padding: 6px 14px; }
         body.vivo.vertical .vivo-envivo { font-size: 20px; padding: 6px 12px; }
-        body.vivo.vertical .sorteo { display: grid; grid-template-columns: auto 1fr; grid-template-rows: 1fr auto auto; align-items: center; justify-items: center; gap: 10px 24px; }
-        body.vivo.vertical .escena { grid-row: 1 / -1; --m: 10px; --b: 300px; gap: 26px; width: auto; }
-        body.vivo.vertical .contador { grid-column: 2; grid-row: 1; align-self: end; font-size: 34px; }
-        body.vivo.vertical .ultimas-box { grid-column: 2; grid-row: 2 / 4; align-self: start; }
-        body.vivo.vertical .ultimas { flex-wrap: wrap; max-width: 330px; }
+        body.vivo.vertical .sorteo { flex-direction: row; justify-content: center; gap: 30px; }
+        body.vivo.vertical .escena { --m: 12px; --b: 330px; gap: 40px; width: auto; }
+        body.vivo.vertical .contador { display: none; }
+        body.vivo.vertical .ultimas-box { gap: 14px; padding: 12px 18px; }
+        body.vivo.vertical .ultimas-box h3 { width: 100px; font-size: 20px; }
+        body.vivo.vertical .ultimas { gap: 12px; }
+        body.vivo.vertical .mini { --t: 74px; }
+        body.vivo.vertical .previa.anterior .mini { --t: 90px; }
+        body.vivo.vertical .previa small { font-size: 14px; }
         body.vivo.vertical .casilla { font-size: 46px; }
         body.vivo.vertical .tablero { gap: 9px; }
         body.vivo.vertical .estado { display: grid; grid-template-columns: 1.35fr 1fr; gap: 24px; }
@@ -474,8 +502,8 @@
         </div>
         <div class="atajos"><kbd>Espacio</kbd> girar · <kbd>A</kbd> automático · <kbd>F</kbd> pantalla completa</div>
 
-        <div class="ultimas-box">
-            <h3>Últimas bolillas</h3>
+        <div class="ultimas-box" id="ultimasBox">
+            <h3 id="ultimasTitulo">Últimas bolillas</h3>
             <div class="ultimas" id="ultimas"></div>
         </div>
     </section>
@@ -593,6 +621,11 @@
             document.body.style.setProperty('--escala', Math.min(innerWidth / w, innerHeight / h));
         };
         addEventListener('resize', ajustar); ajustar();
+        // Las últimas bolillas pasan a ser un panel propio del escenario
+        const box = $('ultimasBox');
+        box.classList.add('panel');
+        $('ultimasTitulo').textContent = 'Últimas bolillas';
+        document.querySelector('.juego').appendChild(box);
     }
     let estado = Bingo.cargarEstado();
     let girando = false;
@@ -682,7 +715,21 @@
         }
     }
 
-    function dibujarUltimas() {
+    function dibujarUltimas(animar) {
+        if (VIVO) {
+            // En la transmisión la bolilla actual ya está grande: acá van las anteriores, en orden
+            const total = estado.drawnNumbers.length;
+            const cant = 7;
+            const previas = estado.drawnNumbers.slice(-(cant + 1), -1).reverse();
+            $('ultimas').innerHTML = previas.length
+                ? previas.map((n, i) => `<div class="previa ${i === 0 ? 'anterior' : ''}">
+                        <div class="mini" style="--c:${Bingo.colorBola(n)}"><span>${n}</span></div>
+                        <small>${i === 0 ? 'ANTERIOR' : 'N° ' + (total - 1 - i)}</small>
+                    </div>`).join('')
+                : '<span class="sin-previas">Acá van a aparecer las bolillas anteriores</span>';
+            if (animar) { const u = $('ultimas'); u.classList.remove('entra'); void u.offsetWidth; u.classList.add('entra'); }
+            return;
+        }
         $('ultimas').innerHTML = estado.drawnNumbers.slice(-7).reverse().map(n =>
             `<div class="mini" style="--c:${Bingo.colorBola(n)}"><span>${n}</span></div>`
         ).join('') || '<span style="color:var(--gris)">Todavía no salió ninguna</span>';
@@ -733,7 +780,7 @@
     }
 
     function dibujarTodo(animar) {
-        dibujarBolitas(); dibujarTablero(); dibujarBolaGrande(animar); dibujarUltimas(); dibujarEstado();
+        dibujarBolitas(); dibujarTablero(); dibujarBolaGrande(animar); dibujarUltimas(animar); dibujarEstado();
     }
 
     /* ---------- Juego ---------- */
