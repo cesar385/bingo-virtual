@@ -144,7 +144,8 @@
             display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center;
             padding: 8px 10px; border-radius: 10px; background: #f6f9ef; border: 2px solid transparent;
         }
-        .premio .badge { grid-row: span 2; justify-self: start; min-width: 92px; text-align: center; padding: 4px 8px; }
+        .premio .badge { justify-self: start; min-width: 84px; text-align: center; padding: 4px 8px; }
+        .premio .quien { grid-column: 1 / -1; }
         .premio .monto { font-weight: 900; font-size: clamp(15px, 2vh, 19px); color: var(--tinta); overflow-wrap: anywhere; }
         .premio .monto.vacio { color: var(--gris); font-weight: 600; font-style: italic; font-size: 14px; }
         .premio .quien { font-size: 13px; color: var(--gris); overflow-wrap: anywhere; }
@@ -154,11 +155,27 @@
         .premio.perdido { opacity: .55; }
         .premio.perdido .monto { text-decoration: line-through; }
         .badge-saleosale { background: #6a1b9a; color: #fff; }
+        .grupo-pozo { border: 2px solid var(--oro); border-radius: 12px; padding: 0 6px 6px; background: #fffbea; }
+        .grupo-pozo.cerrado { border-color: #d9d9d9; background: #f7f7f7; }
+        .grupo-pozo.ganado { border-color: var(--verde); background: #f4fae6; }
+        .grupo-cab {
+            display: flex; justify-content: space-between; align-items: baseline; gap: 4px 10px; flex-wrap: wrap;
+            padding: 7px 4px 6px; font-weight: 900; font-size: 14px; color: #8a6100;
+        }
+        .grupo-pozo.cerrado .grupo-cab { color: var(--gris); }
+        .grupo-pozo.ganado .grupo-cab { color: var(--verde-osc); }
+        .grupo-lim { font-weight: 600; font-size: 12px; }
+        .grupo-lim b { font-size: 15px; }
+        .premios-int { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+        .premios-int .premio { background: #fff; }
+        .premio-saleosale { margin-top: 2px; }
         .premio-monto { font-size: clamp(20px, 4vw, 30px); font-weight: 900; color: var(--verde-osc); margin: -4px 0 8px; }
         .premio-monto:empty { display: none; }
         .form-premios { display: flex; flex-direction: column; gap: 10px; }
         .form-premios label { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: 14px; }
         .form-premios small { font-weight: 400; color: var(--gris); }
+        .fs-pozo { border: 2px solid var(--oro); border-radius: 12px; padding: 8px 12px 12px; margin: 0; display: flex; flex-direction: column; gap: 10px; background: #fffbea; }
+        .fs-pozo legend { font-weight: 900; color: #8a6100; padding: 0 6px; }
         .form-premios .ayuda { margin: 0; font-size: 13px; color: var(--gris); }
 
         .lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow: auto; }
@@ -229,9 +246,13 @@
         /* Dos columnas (tablet acostada / notebook chica): premios compactos en 2x2 */
         @media (orientation: landscape) and (min-width: 900px) and (max-width: 1279px) {
             .estado { grid-template-columns: 2fr 1fr; }
-            .premios { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+            .premios { display: grid; grid-template-columns: 1fr; gap: 6px; }
+            .premios-int { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .premios:not(:has(.grupo-pozo)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .grupo-cab { padding: 4px 2px; font-size: 13px; }
             .premio { padding: 5px 8px; gap: 0 8px; }
             .premio .badge { min-width: 0; font-size: 11px; }
+            .premios-int .premio { grid-template-columns: 1fr; }
             .premio .monto { font-size: 15px; }
             .premio .quien { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .premios-cab { margin-bottom: 6px; }
@@ -360,10 +381,13 @@
     <div class="modal-caja" style="width:min(480px,100%)">
         <h3>🎁 Premios de la partida</h3>
         <form id="formPremios" class="form-premios" autocomplete="off">
+            <fieldset class="fs-pozo">
+            <legend>💰 Bingo con pozo</legend>
+            <label>El pozo vale hasta la bolilla N°<input type="number" id="prLimite" min="15" max="89" placeholder="Sin límite (no hay sale o sale)"></label>
             <label>Cuaterno <small>(4 números de una fila)</small><input type="text" id="prCuaterno" placeholder="Ej: $ 20.000"></label>
             <label>Línea <small>(fila completa)</small><input type="text" id="prLinea" placeholder="Ej: $ 50.000"></label>
             <label>Bingo <small>(cartón lleno — pozo)</small><input type="text" id="prBingo" placeholder="Ej: $ 500.000 o una moto"></label>
-            <label>El pozo del bingo vale hasta la bolilla N°<input type="number" id="prLimite" min="15" max="89" placeholder="Sin límite (no hay sale o sale)"></label>
+            </fieldset>
             <label>Sale o sale <small>(si no salió el bingo a tiempo)</small><input type="text" id="prSale" placeholder="Ej: $ 100.000"></label>
             <p class="ayuda">Si nadie canta bingo hasta esa bolilla, se juega <b>SALE O SALE</b>: se sigue sacando hasta que alguien llene el cartón y se lleva ese premio.</p>
             <div style="display:flex;gap:8px;justify-content:flex-end">
@@ -561,9 +585,7 @@
         const total = estado.drawnNumbers.length;
         const actual = premioEnJuego(total + 1);
         const pasoLimite = limite() && total >= limite();
-        const filas = ['cuaterno', 'linea', 'bingo'];
-        if (limite()) filas.push('saleosale');
-        $('listaPremios').innerHTML = filas.map(t => {
+        const fila = t => {
             const gan = estado.ganadores.filter(g => g.tipo === t);
             let cls = '', quien;
             if (gan.length) {
@@ -575,15 +597,27 @@
                 cls = 'perdido'; quien = 'No hizo falta';
             } else if (t === actual && !estado.bingoGanado) {
                 cls = 'actual';
-                quien = '▶ Se está jugando';
-                if (t === 'bingo' && limite()) quien += ` · quedan ${limite() - total} bolillas`;
-                if (t === 'saleosale') quien = '▶ Se juega hasta que alguien llene el cartón';
+                quien = t === 'saleosale' ? '▶ Se juega hasta que alguien llene el cartón' : '▶ Se está jugando';
             } else {
-                quien = t === 'bingo' && limite() ? `Hasta la bolilla ${limite()}` : t === 'saleosale' ? `Si no sale el bingo hasta la bolilla ${limite()}` : 'Pendiente';
+                quien = t === 'saleosale' ? `Si no sale el bingo hasta la bolilla ${limite()}` : 'Pendiente';
             }
             const monto = premios[t] ? `<span class="monto">${Bingo.escapar(premios[t])}</span>` : '<span class="monto vacio">Premio a definir</span>';
-            return `<li class="premio ${cls}"><span class="badge badge-${t}">${NOMBRE[t]}</span>${monto}<span class="quien">${quien}</span></li>`;
-        }).join('');
+            return `<li class="premio premio-${t} ${cls}"><span class="badge badge-${t}">${NOMBRE[t]}</span>${monto}<span class="quien">${quien}</span></li>`;
+        };
+        const internos = ['cuaterno', 'linea', 'bingo'].map(fila).join('');
+        if (!limite()) { $('listaPremios').innerHTML = internos; return; }
+
+        // Con límite: cuaterno, línea y bingo van dentro del "Bingo con pozo"
+        let estadoPozo, cls = '';
+        if (estado.ganadores.some(g => g.tipo === 'bingo')) { estadoPozo = '¡Pozo entregado!'; cls = 'ganado'; }
+        else if (pasoLimite || estado.bingoGanado) { estadoPozo = 'Terminó el límite'; cls = 'cerrado'; }
+        else { const q = limite() - total; estadoPozo = `quedan <b>${q}</b> bolilla${q === 1 ? '' : 's'}`; cls = 'abierto'; }
+        $('listaPremios').innerHTML = `
+            <li class="grupo-pozo ${cls}">
+                <div class="grupo-cab"><span>💰 BINGO CON POZO</span><span class="grupo-lim">hasta la bolilla ${limite()} · ${estadoPozo}</span></div>
+                <ul class="premios-int">${internos}</ul>
+            </li>
+            ${fila('saleosale')}`;
     }
 
     function evaluarGanadores(n) {
