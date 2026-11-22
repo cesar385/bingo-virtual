@@ -205,7 +205,44 @@
         </div>`;
     }
 
+    // Simula muchas partidas al azar con los cartones dados y devuelve, para cada
+    // premio, en qué bolilla salió en cada simulación. Sirve para estimar
+    // la probabilidad de que salga antes de un límite. No toca el sorteo real.
+    function simular(cartones, sims) {
+        sims = sims || 3000;
+        const filasCarton = cartones.map(c => filas(c.numeros));
+        const res = { cuaterno: [], linea: [], bingo: [] };
+        const pos = new Array(91);
+        const orden = Array.from({ length: 90 }, (_, i) => i + 1);
+        for (let s = 0; s < sims; s++) {
+            for (let i = 89; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = orden[i]; orden[i] = orden[j]; orden[j] = t; }
+            for (let i = 0; i < 90; i++) pos[orden[i]] = i + 1;
+            let cu = 99, li = 99, bi = 99;
+            for (const fs of filasCarton) {
+                let lleno = 0;
+                for (const f of fs) {
+                    const p = f.map(n => pos[n]).sort((a, b) => a - b);
+                    if (p[3] < cu) cu = p[3];
+                    if (p[4] < li) li = p[4];
+                    if (p[4] > lleno) lleno = p[4];
+                }
+                if (lleno < bi) bi = lleno;
+            }
+            res.cuaterno.push(cu); res.linea.push(li); res.bingo.push(bi);
+        }
+        ['cuaterno', 'linea', 'bingo'].forEach(k => res[k].sort((a, b) => a - b));
+        return res;
+    }
+    // Proporción de simulaciones en que el premio salió hasta la bolilla "limite"
+    function probHasta(lista, limite) {
+        let n = 0; for (const x of lista) { if (x <= limite) n++; else break; }
+        return n / lista.length;
+    }
+    // Bolilla a partir de la cual el premio sale en la proporción "p" de las partidas
+    function percentil(lista, p) { return lista[Math.min(lista.length - 1, Math.ceil(p * lista.length) - 1)]; }
+
     global.Bingo = {
+        simular, probHasta, percentil,
         htmlCarton,
         cargarCartones, guardarCartones, proximoNumero, nuevoId,
         columna, rangoColumna, filas, grilla, generarCarton, validar, mismaCombinacion,

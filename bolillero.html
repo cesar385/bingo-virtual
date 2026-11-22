@@ -176,6 +176,15 @@
         .form-premios small { font-weight: 400; color: var(--gris); }
         .fs-pozo { border: 2px solid var(--oro); border-radius: 12px; padding: 8px 12px 12px; margin: 0; display: flex; flex-direction: column; gap: 10px; background: #fffbea; }
         .fs-pozo legend { font-weight: 900; color: #8a6100; padding: 0 6px; }
+        .chances { font-size: 13px; background: #fff; border-radius: 10px; padding: 10px 12px; border: 1px solid var(--borde); }
+        .chances:empty { display: none; }
+        .chances .barras { display: grid; grid-template-columns: auto 1fr auto; gap: 5px 8px; align-items: center; margin: 8px 0 4px; }
+        .chances .bar { height: 8px; border-radius: 99px; background: #eef3e2; overflow: hidden; }
+        .chances .bar i { display: block; height: 100%; border-radius: 99px; }
+        .chances .pct { font-weight: 800; text-align: right; min-width: 42px; }
+        .chances .aviso { margin-top: 8px; padding: 7px 9px; border-radius: 8px; background: #fff3cd; color: #8a6100; font-weight: 600; }
+        .chances .ok { margin-top: 8px; padding: 7px 9px; border-radius: 8px; background: #edf7d9; color: var(--verde-osc); font-weight: 600; }
+        .chances .nota { color: var(--gris); font-size: 12px; margin-top: 6px; }
         .form-premios .ayuda { margin: 0; font-size: 13px; color: var(--gris); }
 
         .lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow: auto; }
@@ -384,6 +393,7 @@
             <fieldset class="fs-pozo">
             <legend>💰 Bingo con pozo</legend>
             <label>El pozo vale hasta la bolilla N°<input type="number" id="prLimite" min="15" max="89" placeholder="Sin límite (no hay sale o sale)"></label>
+            <div class="chances" id="chances" aria-live="polite"></div>
             <label>Cuaterno <small>(4 números de una fila)</small><input type="text" id="prCuaterno" placeholder="Ej: $ 20.000"></label>
             <label>Línea <small>(fila completa)</small><input type="text" id="prLinea" placeholder="Ej: $ 50.000"></label>
             <label>Bingo <small>(cartón lleno — pozo)</small><input type="text" id="prBingo" placeholder="Ej: $ 500.000 o una moto"></label>
@@ -798,8 +808,45 @@
     $('btnPremios').onclick = () => {
         Object.entries(camposPremio).forEach(([id, k]) => $(id).value = premios[k] || '');
         $('modalPremios').classList.add('abierto');
-        $('prCuaterno').focus();
+        simCache = null; calcularChances();
+        $('prLimite').focus();
     };
+    // ---- Chance de que salgan los premios antes del límite (simulación, no afecta el sorteo)
+    let simCache = null, simTimer = null;
+    function cartonesEnJuego() {
+        return Bingo.cargarCartones().filter(c => (c.comprador || '').trim().toLowerCase() !== 'sin vender');
+    }
+    function calcularChances() {
+        const caja = $('chances');
+        const lim = parseInt($('prLimite').value);
+        if (!(lim > 0)) { caja.innerHTML = ''; return; }
+        const enJuego = cartonesEnJuego();
+        const total = Bingo.cargarCartones().length;
+        if (!enJuego.length) {
+            caja.innerHTML = '<div class="aviso">Cargá los cartones vendidos para calcular la chance de que salgan los premios antes del límite.</div>';
+            return;
+        }
+        const clave = enJuego.map(c => c.id).join(',');
+        if (!simCache || simCache.clave !== clave) simCache = { clave, sims: Math.max(800, Math.min(3000, Math.round(60000 / enJuego.length))) }, simCache.res = Bingo.simular(enJuego, simCache.sims);
+        const r = simCache.res;
+        const pc = k => Math.round(Bingo.probHasta(r[k], lim) * 100);
+        const fila = (nombre, k, color) => { const v = pc(k); return `<span>${nombre}</span><span class="bar"><i style="width:${v}%;background:${color}"></i></span><span class="pct">${v}%</span>`; };
+        const pCu = pc('cuaterno'), pLi = pc('linea');
+        const sugerido = Math.min(89, Bingo.percentil(r.linea, .9));
+        let msj;
+        if (pCu < 90 || pLi < 90) {
+            msj = `<div class="aviso">⚠ Con este límite ${pLi < 90 ? 'la línea' : 'el cuaterno'} puede no salir a tiempo (sale ${Math.min(pCu, pLi)} de cada 100 partidas).`
+                + (sugerido > lim ? ` Para que la línea salga 9 de cada 10 veces, poné el límite en la bolilla <b>${sugerido}</b> o más.` : '') + '</div>';
+        } else {
+            msj = '<div class="ok">✔ Con este límite, cuaterno y línea salen casi siempre antes del final del pozo.</div>';
+        }
+        caja.innerHTML = `<b>Chance de que salga hasta la bolilla ${lim}</b> <span style="color:var(--gris)">(${enJuego.length} cartones en juego)</span>
+            <div class="barras">${fila('Cuaterno', 'cuaterno', '#26a69a')}${fila('Línea', 'linea', '#f9b800')}${fila('Bingo (pozo)', 'bingo', '#e53935')}</div>
+            ${msj}
+            <div class="nota">Es un cálculo con ${simCache.sims.toLocaleString('es-AR')} partidas simuladas al azar. El sorteo real no se modifica.${total > enJuego.length ? ` No se cuentan ${total - enJuego.length} cartones "Sin vender".` : ''}</div>`;
+    }
+    $('prLimite').addEventListener('input', () => { clearTimeout(simTimer); simTimer = setTimeout(calcularChances, 150); });
+
     $('btnCancelarPremios').onclick = () => $('modalPremios').classList.remove('abierto');
     $('formPremios').onsubmit = e => {
         e.preventDefault();
