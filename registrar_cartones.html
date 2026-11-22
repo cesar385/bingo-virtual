@@ -3,209 +3,504 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bingo 90 Bolas - Registrar Cartones</title>
+    <title>Bingo Virtual - Cartones</title>
+    <link rel="stylesheet" href="bingo.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            background-color: #f4f4f4;
-            padding: 20px;
+        .pagina {
+            display: grid; grid-template-columns: minmax(330px, 420px) 1fr; gap: 18px;
+            padding: 18px; max-width: 1500px; margin: 0 auto; align-items: start;
         }
-        .container {
-            text-align: center;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            width: 80%; /* Cambiado a 80% para usar más espacio de la ventana */
+        @media (max-width: 900px) { .pagina { grid-template-columns: 1fr; padding: 10px; } }
+        .form-panel { position: sticky; top: 76px; }
+        @media (max-width: 900px) { .form-panel { position: static; } }
+
+        .campo { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+        .campo label { font-size: 13px; font-weight: 700; color: var(--gris); }
+        .fila2 { display: grid; grid-template-columns: 1fr 110px; gap: 8px; }
+
+        .tabs { display: flex; gap: 4px; background: #eef3e2; padding: 4px; border-radius: 10px; margin-bottom: 10px; }
+        .tabs button { flex: 1; border: 0; background: none; padding: 7px; border-radius: 8px; font-weight: 700; cursor: pointer; color: var(--gris); }
+        .tabs button.activo { background: #fff; color: var(--azul); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+
+        .editor { display: grid; grid-template-columns: repeat(9, 1fr); gap: 3px; border: 2px solid var(--verde); border-radius: 10px; padding: 5px; }
+        .editor input {
+            width: 100%; aspect-ratio: 1/1; text-align: center; padding: 0; border-radius: 6px;
+            border: 1.5px solid var(--borde); font-weight: 800; font-size: 16px; -moz-appearance: textfield;
         }
-        .bingo-buttons {
-            margin-top: 20px;
+        .editor input::-webkit-outer-spin-button, .editor input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .editor input::placeholder { font-size: 9px; color: #b5c0a8; font-weight: 400; }
+        .editor input.lleno { background: #eaf4fb; border-color: var(--azul); }
+        .editor input.mal { background: #fde8e7; border-color: var(--rojo); }
+        .editor-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--gris); margin-top: 6px; }
+        .editor-info span.ok { color: var(--verde-osc); font-weight: 700; }
+        textarea {
+            width: 100%; min-height: 110px; font: inherit; padding: 10px; border-radius: 10px;
+            border: 2px solid var(--borde); resize: vertical; outline: none;
         }
-        .bingo-buttons button {
-            font-size: 20px;
-            padding: 10px 20px;
-            margin: 5px;
-            cursor: pointer;
-        }
-        .carton-list {
-            margin-top: 20px;
-            text-align: center;
-        }
-        .carton {
-            margin: 10px; /* Ajustar el margen para dar más espacio entre cartones */
-            display: inline-block;
-            width: calc(25% - 20px); /* Ajustar el ancho para ocupar el 25% menos el margen */
-        }
-        .carton-header {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .carton-table {
-            border: 2px solid #000;
-            border-collapse: collapse;
-            margin: 0 auto;
-            width: 100%; /* Asegura que la tabla use el 100% del ancho del cartón */
-        }
-        .carton-table td {
-            width: 60px; /* Aumentar el ancho de las celdas */
-            height: 60px; /* Aumentar la altura de las celdas */
-            text-align: center;
-            border: 1px solid #000;
-            font-size: 24px; /* Aumentar el tamaño de la fuente para mayor visibilidad */
-            background-color: #f0f0f0;
-        }
-        .eliminar-btn, .editar-btn {
-            margin-top: 10px;
-            padding: 5px 10px;
-            border: none;
-            cursor: pointer;
-        }
-        .eliminar-btn {
-            background-color: red;
-            color: white;
-        }
-        .eliminar-btn:hover {
-            background-color: darkred;
-        }
-        .editar-btn {
-            background-color: orange;
-            color: white;
-        }
-        .editar-btn:hover {
-            background-color: darkorange;
-        }
-        .row {
-            display: flex;
-            justify-content: center;
+        textarea:focus { border-color: var(--azul); }
+        .ayuda { font-size: 12px; color: var(--gris); margin: 6px 0 0; }
+
+        .acciones { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        .acciones .btn-verde { flex: 1; font-size: 16px; padding: 11px; }
+        .mensajes { margin-top: 10px; font-size: 14px; }
+        .mensajes .err { background: #fde8e7; color: #b42318; padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; }
+        .mensajes .avi { background: #fff3cd; color: #8a6100; padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; }
+        .editando { background: #eaf4fb; color: var(--azul-osc); padding: 8px 10px; border-radius: 8px; margin-bottom: 10px; font-weight: 700; display: none; }
+
+        details.lote { margin-top: 16px; border-top: 1px dashed var(--borde); padding-top: 12px; }
+        details.lote summary { cursor: pointer; font-weight: 700; color: var(--azul); }
+        .lote-fila { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+        .barra-lista { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+        .barra-lista input[type=search] { flex: 1; min-width: 180px; }
+        .stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+        .stat { background: #fff; border-radius: 12px; padding: 10px 14px; box-shadow: var(--sombra); min-width: 110px; }
+        .stat b { display: block; font-size: 24px; color: var(--azul); }
+        .stat span { font-size: 12px; color: var(--gris); }
+        .cartones { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; align-items: start; }
+        .carton-pie .acc { margin-left: auto; display: flex; gap: 4px; }
+        .carton-pie .acc button { border: 0; background: #eef3e2; border-radius: 6px; padding: 3px 7px; cursor: pointer; font-size: 13px; }
+        .carton-pie .acc button:hover { background: #e2ebcf; }
+        .carton.resaltado { outline: 3px solid var(--azul); outline-offset: 2px; }
+        .vacio-lista { grid-column: 1 / -1; text-align: center; color: var(--gris); padding: 40px 10px; }
+
+        @media print {
+            .topbar, .form-panel, .barra-lista, .stats, .acc, .toast, .modal { display: none !important; }
+            body { background: #fff; }
+            .pagina { display: block; padding: 0; }
+            .cartones { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .carton { break-inside: avoid; box-shadow: none; }
+            .carton-pie .barra, .carton-pie .badge, .carton-pie > span:first-child { display: none; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Registrar Cartones</h1>
-        <form id="cartonForm">
-            <input type="text" id="compradorInput" placeholder="Nombre del Comprador" required />
-            <input type="text" id="cartonInput" placeholder="Ingrese números del cartón (coma separados)" required />
-            <button type="submit">Agregar Cartón</button>
+<header class="topbar">
+    <div class="marca">BINGO <span>VIRTUAL</span></div>
+    <a class="btn btn-azul" href="bolillero.html">🎰 Ir al bolillero</a>
+    <a class="btn" href="index.html">🏠 Inicio</a>
+</header>
+
+<main class="pagina">
+    <section class="panel form-panel">
+        <h2 id="formTitulo">Cargar cartón</h2>
+        <div class="editando" id="avisoEditando"></div>
+        <form id="form" autocomplete="off">
+            <div class="fila2">
+                <div class="campo">
+                    <label for="comprador">Comprador</label>
+                    <input type="text" id="comprador" placeholder="Nombre y apellido" list="listaCompradores" required>
+                    <datalist id="listaCompradores"></datalist>
+                </div>
+                <div class="campo">
+                    <label for="numero">N° cartón</label>
+                    <input type="number" id="numero" min="1" placeholder="auto">
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button type="button" data-tab="grilla" class="activo">Grilla</button>
+                <button type="button" data-tab="texto">Escribir números</button>
+            </div>
+
+            <div id="tabGrilla">
+                <div class="editor" id="editor"></div>
+                <div class="editor-info"><span>Cada columna es una decena (1-9, 10-19 … 80-90)</span><span id="contador">0/15</span></div>
+            </div>
+            <div id="tabTexto" hidden>
+                <textarea id="texto" placeholder="Ej: 3, 15, 27, 48, 70&#10;8, 22, 39, 51, 84&#10;12, 33, 45, 66, 90"></textarea>
+                <p class="ayuda">15 números separados por coma, espacio o renglón. Se toman de a 5 por fila, en el orden escrito.</p>
+            </div>
+
+            <div class="mensajes" id="mensajes"></div>
+
+            <div class="acciones">
+                <button type="submit" class="btn btn-verde" id="btnGuardar">💾 Guardar cartón</button>
+                <button type="button" class="btn" id="btnAzar" title="Completar con un cartón válido al azar">🎲 Al azar</button>
+                <button type="button" class="btn" id="btnLimpiar">Limpiar</button>
+            </div>
         </form>
 
-        <div class="carton-list" id="cartonList"></div>
-        <div class="bingo-buttons">
-            <button id="viewBolilleroButton">Ir al Bolillero</button>
-            <button id="mainScreenButton">PANTALLA PRINCIPAL</button>
+        <details class="lote">
+            <summary>Generar varios cartones al azar</summary>
+            <div class="lote-fila">
+                <input type="number" id="loteCant" min="1" max="200" value="10" style="width:90px">
+                <input type="text" id="loteComp" placeholder="Comprador (opcional)" style="flex:1">
+                <button class="btn btn-azul" id="btnLote">Generar</button>
+            </div>
+            <p class="ayuda">Se numeran a partir del próximo N° libre. Útil para imprimir y vender.</p>
+        </details>
+    </section>
+
+    <section>
+        <div class="stats" id="stats"></div>
+        <div class="barra-lista">
+            <input type="search" id="buscar" placeholder="Buscar por nombre, N° de cartón o número…">
+            <select id="filtro">
+                <option value="todos">Todos</option>
+                <option value="premio">Con línea o bingo</option>
+                <option value="cerca">A 1 número</option>
+            </select>
+            <button class="btn" id="btnImprimir" title="Imprimir los cartones listados">🖨️ Imprimir</button>
+            <button class="btn" id="btnExportar" title="Descargar copia de seguridad">⬇️ Exportar</button>
+            <label class="btn" title="Cargar copia de seguridad">⬆️ Importar<input type="file" id="importar" accept=".json,application/json" hidden></label>
+            <button class="btn btn-rojo" id="btnBorrarTodos">Borrar todos</button>
+        </div>
+        <div class="cartones" id="lista"></div>
+    </section>
+</main>
+
+<div class="modal" id="modalConfirmar">
+    <div class="modal-caja" style="width:min(420px,100%)">
+        <h3 id="confTitulo">¿Seguro?</h3>
+        <p id="confTexto" style="margin:0 0 16px"></p>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn" id="confNo">Cancelar</button>
+            <button class="btn btn-rojo" id="confSi">Sí, borrar</button>
         </div>
     </div>
+</div>
+<div class="toast" id="toast"></div>
 
-    <script>
-        const cartonForm = document.getElementById('cartonForm');
-        const compradorInput = document.getElementById('compradorInput');
-        const cartonInput = document.getElementById('cartonInput');
-        const cartonListDiv = document.getElementById('cartonList');
-        const viewBolilleroButton = document.getElementById('viewBolilleroButton');
-        const mainScreenButton = document.getElementById('mainScreenButton');
+<script src="bingo-core.js"></script>
+<script>
+    const $ = id => document.getElementById(id);
+    let cartones = Bingo.cargarCartones();
+    let estado = Bingo.cargarEstado();
+    let editarId = null;
+    let tab = 'grilla';
+    let imprimiendo = false;
 
-        let cartones = JSON.parse(localStorage.getItem('cartones')) || [];
-        let editarIndex = null;
+    function toast(msg) {
+        const t = $('toast'); t.textContent = msg; t.classList.add('ver');
+        clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('ver'), 2400);
+    }
+    function guardar() { Bingo.guardarCartones(cartones); }
 
-        function mostrarCartones() {
-            cartonListDiv.innerHTML = '';
-            let row;
+    /* ---------- Editor de grilla ---------- */
+    const celdas = [];
+    (function crearEditor() {
+        const ed = $('editor');
+        for (let f = 0; f < 3; f++) for (let c = 0; c < 9; c++) {
+            const r = Bingo.rangoColumna(c);
+            const inp = document.createElement('input');
+            inp.type = 'number'; inp.min = r.min; inp.max = r.max; inp.inputMode = 'numeric';
+            inp.placeholder = `${r.min}-${r.max}`;
+            inp.dataset.f = f; inp.dataset.c = c;
+            inp.setAttribute('aria-label', `Fila ${f + 1}, columna ${r.min} a ${r.max}`);
+            inp.addEventListener('input', revisarEditor);
+            inp.addEventListener('keydown', moverConFlechas);
+            ed.appendChild(inp);
+            celdas.push(inp);
+        }
+    })();
 
-            cartones.forEach((carton, index) => {
-                if (index % 4 === 0) {
-                    // Crear una nueva fila cada 4 cartones
-                    row = document.createElement('div');
-                    row.classList.add('row');
-                    cartonListDiv.appendChild(row);
-                }
+    function moverConFlechas(e) {
+        const i = celdas.indexOf(e.target);
+        // Flechas arriba/abajo cambian de fila (en vez de sumar/restar al número)
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            const j = i + (e.key === 'ArrowDown' ? 9 : -9);
+            if (celdas[j]) celdas[j].focus();
+        }
+    }
 
-                const cartonDiv = document.createElement('div');
-                cartonDiv.classList.add('carton');
-                cartonDiv.innerHTML = `
-                    <div class="carton-header">
-                        Comprador: ${carton.comprador} | Cartón: ${index + 1} <!-- Cambio aquí para mostrar la numeración automática -->
-                    </div>
-                    <table class="carton-table">
-                        ${crearTablaCarton(carton.numeros)}
-                    </table>
-                    <button class="eliminar-btn" onclick="eliminarCarton(${index})">Eliminar</button>
-                    <button class="editar-btn" onclick="editarCarton(${index})">Editar</button>
-                `;
-                row.appendChild(cartonDiv);
+    function revisarEditor() {
+        let total = 0;
+        celdas.forEach(inp => {
+            const v = inp.value.trim();
+            inp.classList.remove('lleno', 'mal');
+            if (v === '') return;
+            total++;
+            const n = +v, r = Bingo.rangoColumna(+inp.dataset.c);
+            inp.classList.add(n >= r.min && n <= r.max && Number.isInteger(n) ? 'lleno' : 'mal');
+        });
+        const porFila = [0, 1, 2].map(f => celdas.filter(i => +i.dataset.f === f && i.value.trim() !== '').length);
+        const ok = total === 15 && porFila.every(x => x === 5);
+        $('contador').textContent = `${total}/15 · filas: ${porFila.join(' / ')}`;
+        $('contador').className = ok ? 'ok' : '';
+    }
+
+    function leerEditor() {
+        const errores = [];
+        const numeros = [];
+        for (let f = 0; f < 3; f++) {
+            const fila = celdas.filter(i => +i.dataset.f === f && i.value.trim() !== '');
+            if (fila.length !== 5) errores.push(`La fila ${f + 1} tiene ${fila.length} números; debe tener 5.`);
+            fila.forEach(i => {
+                const n = +i.value, r = Bingo.rangoColumna(+i.dataset.c);
+                if (!(n >= r.min && n <= r.max)) errores.push(`El ${i.value} no va en la columna ${r.min}-${r.max}.`);
+                numeros.push(n);
             });
         }
+        return { numeros, errores };
+    }
 
-        function crearTablaCarton(numeros) {
-            const tabla = [[], [], []];
-            for (let i = 0; i < 15; i++) {
-                tabla[Math.floor(i / 5)].push(numeros[i]);
-            }
-            return tabla.map(fila => `
-                <tr>
-                    ${fila.map(num => `<td>${num || ''}</td>`).join('')}
-                </tr>
-            `).join('');
-        }
+    function ponerEnEditor(numeros) {
+        celdas.forEach(i => i.value = '');
+        const g = Bingo.grilla(numeros);
+        if (!g) return false;
+        g.forEach((fila, f) => fila.forEach((n, c) => { if (n != null) celdas[f * 9 + c].value = n; }));
+        revisarEditor();
+        return true;
+    }
 
-        function agregarCarton(event) {
-            event.preventDefault();
-            const comprador = compradorInput.value.trim();
-            const cartonNumeros = cartonInput.value.split(',').map(num => parseInt(num.trim()));
+    function leerTexto() {
+        const nums = ($('texto').value.match(/\d+/g) || []).map(Number);
+        return { numeros: nums, errores: [] };
+    }
 
-            if (cartonNumeros.length === 15) {
-                const nuevoCarton = {
-                    comprador,
-                    numeros: cartonNumeros,
-                };
-
-                if (editarIndex !== null) {
-                    cartones[editarIndex] = nuevoCarton;
-                    editarIndex = null;
-                } else {
-                    cartones.push(nuevoCarton);
-                }
-
-                localStorage.setItem('cartones', JSON.stringify(cartones));
-                mostrarCartones();
-                resetearFormulario();
-            } else {
-                alert('Cada cartón debe tener exactamente 15 números.');
+    function cambiarTab(t) {
+        tab = t;
+        document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('activo', b.dataset.tab === t));
+        $('tabGrilla').hidden = t !== 'grilla';
+        $('tabTexto').hidden = t !== 'texto';
+    }
+    document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+        // pasar lo cargado de una pestaña a la otra
+        if (b.dataset.tab === 'texto' && tab === 'grilla') {
+            const { numeros } = leerEditor();
+            if (numeros.length) $('texto').value = Bingo.filas(numeros).map(f => f.join(', ')).filter(Boolean).join('\n');
+        } else if (b.dataset.tab === 'grilla' && tab === 'texto') {
+            const { numeros } = leerTexto();
+            if (numeros.length === 15 && !ponerEnEditor(numeros)) {
+                mostrarMensajes([], ['Estos números no entran en la grilla clásica (dos de la misma decena en una fila). Seguí en "Escribir números".']);
+                return;
             }
         }
+        cambiarTab(b.dataset.tab);
+    });
 
-        function editarCarton(index) {
-            const carton = cartones[index];
-            compradorInput.value = carton.comprador;
-            cartonInput.value = carton.numeros.join(', ');
-            editarIndex = index;
+    function mostrarMensajes(errores, avisos) {
+        $('mensajes').innerHTML = errores.map(e => `<div class="err">✖ ${Bingo.escapar(e)}</div>`).join('') +
+            (avisos || []).map(a => `<div class="avi">⚠ ${Bingo.escapar(a)}</div>`).join('');
+    }
+
+    function limpiarForm() {
+        editarId = null;
+        $('form').reset();
+        celdas.forEach(i => i.value = '');
+        $('texto').value = '';
+        revisarEditor();
+        mostrarMensajes([], []);
+        $('formTitulo').textContent = 'Cargar cartón';
+        $('btnGuardar').textContent = '💾 Guardar cartón';
+        $('avisoEditando').style.display = 'none';
+        $('numero').placeholder = 'auto (' + Bingo.proximoNumero(cartones) + ')';
+    }
+
+    /* ---------- Guardar ---------- */
+    $('form').addEventListener('submit', e => {
+        e.preventDefault();
+        const comprador = $('comprador').value.trim();
+        const leido = tab === 'grilla' ? leerEditor() : leerTexto();
+        const numeros = Bingo.filas(leido.numeros).flatMap(f => f.slice().sort((a, b) => a - b));
+        const v = Bingo.validar(leido.numeros);
+        const errores = leido.errores.concat(v.errores);
+        const numero = $('numero').value ? parseInt($('numero').value) : null;
+
+        if (!comprador) errores.unshift('Falta el nombre del comprador.');
+        if (numero != null) {
+            const otro = cartones.find(c => +c.numero === numero && c.id !== editarId);
+            if (otro) errores.push(`Ya existe el cartón N° ${numero} (${otro.comprador}).`);
         }
+        const igual = cartones.find(c => c.id !== editarId && Bingo.mismaCombinacion(c.numeros, numeros));
+        if (igual && !errores.length) errores.push(`Estos números son iguales al cartón N° ${igual.numero} (${igual.comprador}).`);
+        if (errores.length) { mostrarMensajes([...new Set(errores)], []); return; }
 
-        function eliminarCarton(index) {
-            cartones.splice(index, 1);
-            localStorage.setItem('cartones', JSON.stringify(cartones));
-            mostrarCartones();
+        if (editarId) {
+            const c = cartones.find(c => c.id === editarId);
+            Object.assign(c, { comprador, numeros, numero: numero || c.numero });
+            toast(`Cartón N° ${c.numero} actualizado`);
+            var idResaltar = c.id;
+        } else {
+            const nuevo = { id: Bingo.nuevoId(), numero: numero || Bingo.proximoNumero(cartones), comprador, numeros };
+            cartones.push(nuevo);
+            toast(`Cartón N° ${nuevo.numero} guardado`);
+            var idResaltar = nuevo.id;
         }
+        guardar();
+        const avisos = v.avisos;
+        limpiarForm();
+        if (avisos.length) mostrarMensajes([], avisos);
+        $('comprador').value = comprador; // facilita cargar varios del mismo comprador
+        render(idResaltar);
+        $('comprador').focus();
+    });
 
-        function resetearFormulario() {
-            compradorInput.value = '';
-            cartonInput.value = '';
+    $('btnAzar').onclick = () => {
+        const nums = Bingo.generarCarton();
+        ponerEnEditor(nums);
+        $('texto').value = Bingo.filas(nums).map(f => f.join(', ')).join('\n');
+        cambiarTab('grilla');
+        mostrarMensajes([], []);
+    };
+    $('btnLimpiar').onclick = limpiarForm;
+
+    $('btnLote').onclick = () => {
+        const cant = Math.max(1, Math.min(200, parseInt($('loteCant').value) || 0));
+        const comp = $('loteComp').value.trim() || 'Sin vender';
+        let n = Bingo.proximoNumero(cartones);
+        let creados = 0;
+        for (let i = 0; i < cant; i++) {
+            let nums, intentos = 0;
+            do { nums = Bingo.generarCarton(); } while (cartones.some(c => Bingo.mismaCombinacion(c.numeros, nums)) && ++intentos < 20);
+            cartones.push({ id: Bingo.nuevoId(), numero: n++, comprador: comp, numeros: nums });
+            creados++;
         }
+        guardar(); render(); limpiarForm();
+        toast(`Se generaron ${creados} cartones`);
+    };
 
-        cartonForm.addEventListener('submit', agregarCarton);
-        viewBolilleroButton.addEventListener('click', () => {
-            window.location.href = 'bolillero.html';
+    /* ---------- Lista ---------- */
+    function filtrados() {
+        const q = $('buscar').value.trim().toLowerCase();
+        const filtro = $('filtro').value;
+        const sacadas = new Set(estado.drawnNumbers);
+        return cartones.filter(c => {
+            if (q) {
+                const coincide = String(c.numero) === q || (c.comprador || '').toLowerCase().includes(q) ||
+                    (/^\d+$/.test(q) && c.numeros.includes(+q));
+                if (!coincide) return false;
+            }
+            if (filtro === 'todos') return true;
+            const p = Bingo.progreso(c, sacadas);
+            if (filtro === 'premio') return p.linea || p.bingo;
+            if (filtro === 'cerca') return !p.bingo && (p.faltan.length === 1 || (!p.linea && p.minFaltaLinea === 1));
+            return true;
+        }).sort((a, b) => (+a.numero) - (+b.numero));
+    }
+
+    function render(resaltar) {
+        const sacadas = imprimiendo ? [] : estado.drawnNumbers;
+        const ultima = imprimiendo ? null : estado.drawnNumbers[estado.drawnNumbers.length - 1];
+        const lista = filtrados();
+        const acc = c => `<span class="acc">
+            <button data-acc="editar" data-id="${c.id}" title="Editar">✏️</button>
+            <button data-acc="imprimir" data-id="${c.id}" title="Imprimir este cartón">🖨️</button>
+            <button data-acc="borrar" data-id="${c.id}" title="Eliminar">🗑️</button></span>`;
+        $('lista').innerHTML = lista.length
+            ? lista.map(c => Bingo.htmlCarton(c, sacadas, ultima, acc(c))).join('')
+            : `<div class="vacio-lista">${cartones.length ? 'Ningún cartón coincide con la búsqueda.' : 'Todavía no hay cartones. Cargá el primero con el formulario o generá varios al azar.'}</div>`;
+
+        // estadísticas
+        const comps = new Set(cartones.map(c => (c.comprador || '').trim().toLowerCase()).filter(Boolean));
+        const set = new Set(estado.drawnNumbers);
+        const premiados = cartones.filter(c => Bingo.progreso(c, set).linea).length;
+        $('stats').innerHTML = `
+            <div class="stat"><b>${cartones.length}</b><span>cartones</span></div>
+            <div class="stat"><b>${comps.size}</b><span>compradores</span></div>
+            <div class="stat"><b>${estado.drawnNumbers.length}</b><span>bolillas sacadas</span></div>
+            <div class="stat"><b>${premiados}</b><span>con línea</span></div>`;
+        $('listaCompradores').innerHTML = [...new Set(cartones.map(c => c.comprador).filter(Boolean))].map(n => `<option value="${Bingo.escapar(n)}">`).join('');
+
+        if (resaltar) {
+            const el = document.querySelector(`.carton[data-id="${resaltar}"]`);
+            if (el) { el.classList.add('resaltado'); el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); setTimeout(() => el.classList.remove('resaltado'), 1800); }
+        }
+    }
+
+    $('lista').addEventListener('click', e => {
+        const b = e.target.closest('button[data-acc]');
+        if (!b) return;
+        const c = cartones.find(c => c.id === b.dataset.id);
+        if (!c) return;
+        if (b.dataset.acc === 'editar') editar(c);
+        else if (b.dataset.acc === 'borrar') confirmar('¿Eliminar cartón?', `Se va a borrar el cartón N° ${c.numero} de ${c.comprador}.`, () => {
+            cartones = cartones.filter(x => x.id !== c.id);
+            if (editarId === c.id) limpiarForm();
+            guardar(); render(); toast('Cartón eliminado');
         });
+        else if (b.dataset.acc === 'imprimir') imprimir([c]);
+    });
 
-        mainScreenButton.addEventListener('click', () => {
-            window.location.href = 'index.html';
+    function editar(c) {
+        limpiarForm();
+        editarId = c.id;
+        $('comprador').value = c.comprador;
+        $('numero').value = c.numero;
+        $('texto').value = Bingo.filas(c.numeros).map(f => f.join(', ')).join('\n');
+        cambiarTab(ponerEnEditor(c.numeros) ? 'grilla' : 'texto');
+        $('formTitulo').textContent = 'Editar cartón';
+        $('btnGuardar').textContent = '💾 Guardar cambios';
+        $('avisoEditando').style.display = 'block';
+        $('avisoEditando').innerHTML = `Editando el cartón N° ${Bingo.escapar(c.numero)} · <a href="#" id="cancelarEd">cancelar</a>`;
+        $('cancelarEd').onclick = ev => { ev.preventDefault(); limpiarForm(); };
+        $('comprador').focus();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* ---------- Imprimir / exportar / importar ---------- */
+    function imprimir(soloEstos) {
+        imprimiendo = true;
+        if (soloEstos) {
+            $('lista').innerHTML = soloEstos.map(c => Bingo.htmlCarton(c, [], null)).join('');
+        } else render();
+        setTimeout(() => { window.print(); imprimiendo = false; render(); }, 50);
+    }
+    $('btnImprimir').onclick = () => imprimir(null);
+
+    $('btnExportar').onclick = () => {
+        const blob = new Blob([JSON.stringify(cartones, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `cartones-bingo-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    };
+    $('importar').onchange = e => {
+        const f = e.target.files[0]; if (!f) return;
+        const r = new FileReader();
+        r.onload = () => {
+            try {
+                const datos = JSON.parse(r.result);
+                if (!Array.isArray(datos)) throw 0;
+                let agregados = 0, salteados = 0;
+                datos.forEach(d => {
+                    const nums = (d.numeros || []).map(Number);
+                    if (Bingo.validar(nums).errores.length || cartones.some(c => Bingo.mismaCombinacion(c.numeros, nums))) { salteados++; return; }
+                    const numero = d.numero && !cartones.some(c => +c.numero === +d.numero) ? d.numero : Bingo.proximoNumero(cartones);
+                    cartones.push({ id: Bingo.nuevoId(), numero, comprador: String(d.comprador || 'Sin nombre'), numeros: nums });
+                    agregados++;
+                });
+                guardar(); render(); limpiarForm();
+                toast(`Importados: ${agregados}` + (salteados ? ` · salteados: ${salteados}` : ''));
+            } catch (err) { toast('El archivo no es una copia válida de cartones'); }
+            e.target.value = '';
+        };
+        r.readAsText(f);
+    };
+
+    $('btnBorrarTodos').onclick = () => {
+        if (!cartones.length) return;
+        confirmar('¿Borrar TODOS los cartones?', `Se van a borrar ${cartones.length} cartones. Te conviene exportar una copia antes.`, () => {
+            cartones = []; guardar(); limpiarForm(); render(); toast('Se borraron todos los cartones');
         });
+    };
 
-        mostrarCartones();
-    </script>
+    /* ---------- Confirmación ---------- */
+    let accionConfirmar = null;
+    function confirmar(titulo, texto, accion) {
+        $('confTitulo').textContent = titulo; $('confTexto').textContent = texto;
+        accionConfirmar = accion; $('modalConfirmar').classList.add('abierto');
+    }
+    $('confNo').onclick = () => $('modalConfirmar').classList.remove('abierto');
+    $('confSi').onclick = () => { $('modalConfirmar').classList.remove('abierto'); if (accionConfirmar) accionConfirmar(); };
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') $('modalConfirmar').classList.remove('abierto'); });
 
+    $('buscar').oninput = () => render();
+    $('filtro').onchange = () => render();
+
+    // Si el bolillero está abierto en otra pestaña, los cartones se marcan en vivo
+    window.addEventListener('storage', e => {
+        if (e.key === 'bingoState') { estado = Bingo.cargarEstado(); render(); }
+        if (e.key === 'cartones') { cartones = Bingo.cargarCartones(); render(); }
+    });
+
+    limpiarForm();
+    render();
+</script>
 </body>
 </html>
